@@ -1,27 +1,31 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
-  <meta charset="UTF-8"> 
-  <title>Lista de Quejas</title>
-  <link rel="stylesheet" href="/complaint_list_style.css">
+    <meta charset="UTF-8">
+    <title>Lista de Quejas</title>
+    <link rel="stylesheet" href="/complaint_list_style.css">
 
-  <script src="https://www.google.com/recaptcha/api.js?render=6Ld0TagrAAAAACNejDK0_2e_NdQxsTWR15btG5xs"></script>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://www.google.com/recaptcha/api.js?render=6Ld0TagrAAAAACNejDK0_2e_NdQxsTWR15btG5xs"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
-        <style>
+    <style>
         body {
             background-color: #f8f9fa;
         }
 
-        .card-custom {
-            border: none;
-            border-radius: 20px;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-            transition: transform 0.2s;
+        .custom_button {
+            height: 37px;
+            background-color: #339BBF;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #fff;
         }
 
-        .card-custom:hover {
-            transform: translateY(-4px) scale(1.03);
+        .custom_button:hover {
+            background-color: #017297;
+            color: #fff
         }
 
         .icon-bg {
@@ -55,94 +59,120 @@
             color: #6c757d;
             margin-bottom: 40px;
         }
+
+        .custom_table {
+            border-radius: 20px;
+            overflow: hidden;
+            border: none;
+        }
+
+        .custom_table td {
+            border: none;
+            color: #6c757d;
+            font-size: 1rem;
+        }
+
+        .custom_th {
+            background-color: #10B981 !important;
+            color: #fff !important;
+            font-size: 1.2rem;
+            border: none !important;
+            font-weight: 600 !important;
+        }
     </style>
 
 </head>
-<body class="p-4">
+
+<body class="">
     <nav class="navbar navbar-light bg-white shadow-sm mb-4">
-        <div class="container d-flex justify-content-center">
-            <span class="navbar-brand mb-0 h1 text-center">
-                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"
-                    fill="#2664eb">
-                    <path
-                        d="M200-280v-280h80v280h-80Zm240 0v-280h80v280h-80ZM80-120v-80h800v80H80Zm600-160v-280h80v280h-80ZM80-640v-80l400-200 400 200v80H80Z" />
+        <div class="container-fluid d-flex justify-content-start">
+            <a href="/home" class="btn custom_button d-flex align-items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" height="35" viewBox="0 0 24 24" width="35" fill="#fff"
+                    class="me-2">
+                    <path d="M0 0h24v24H0z" fill="none" />
+                    <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
                 </svg>
-                Quejas de Entidades Boyacá
-            </span>
+                Volver al inicio
+            </a>
         </div>
     </nav>
 
     <div class="container text-center">
-        <div class="icon-bg icon-blue mb-3" style="background:#2664eb;">
-            <svg xmlns="http://www.w3.org/2000/svg" height="50px" viewBox="0 -960 960 960" width="50px" fill="#FFFFFF">
+        <div class="icon-bg icon-blue mb-3" style="background:#10B981;">
+            <svg xmlns="http://www.w3.org/2000/svg" height="40" viewBox="0 0 24 24" width="40" fill="#fff">
+                <path d="M0 0h24v24H0z" fill="none" />
                 <path
-                    d="M160-120v-80h480v80H160Zm226-194L160-540l84-86 228 226-86 86Zm254-254L414-796l86-84 226 226-86 86Zm184 408L302-682l56-56 522 522-56 56Z" />
+                    d="M19 5v14H5V5h14m1.1-2H3.9c-.5 0-.9.4-.9.9v16.2c0 .4.4.9.9.9h16.2c.4 0 .9-.5.9-.9V3.9c0-.5-.5-.9-.9-.9zM11 7h6v2h-6V7zm0 4h6v2h-6v-2zm0 4h6v2h-6zM7 7h2v2H7zm0 4h2v2H7zm0 4h2v2H7z" />
             </svg>
         </div>
-        <div class="title">Inicio</div>
+        <div class="title">Consultar Quejas</div>
         <div class="subtitle">
-            Sistema web para radicar y consultar quejas ciudadanas sobre entidades públicas del departamento de Boyacá.
-        </div>
+            Consultar las quejas realizadas.
 
-  <div class="container" id="complaints-container" style="display:none;">
+            <div class="container" id="complaints-container" style="display:none;">
 
-    <div class="row">
-
-
-    </div>
-    <div class="col">
-        <h1 class="mb-4">Lista de Quejas</h1>
-
-    <% if (complaints.length > 0) { %>
-      <table class="table table-bordered table-striped rounded-sm">
-        <thead>
-          <tr>
-            <th>Entidad</th>
-            <th>Descripción</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% complaints.forEach(c => { %>
-            <tr>
-              <td><%= c.public_entity %></td>
-              <td><%= c.description %></td>
-            </tr>
-          <% }) %>
-        </tbody>
-      </table>
-    <% } else { %>
-      <div class="alert alert-info">No hay quejas registradas.</div>
-    <% } %>
-
-    <button>Generar reporte</button>
-
-    </div>
-    
-  </div>
+                <div class="row">
 
 
-  
-  <script>
-    grecaptcha.ready(function() {
-      grecaptcha.execute('6Ld0TagrAAAAACNejDK0_2e_NdQxsTWR15btG5xs', {action: 'view_list'}).then(function(token) {
-        // Llamamos al backend para validar el token
-        fetch('/verify-captcha', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ token })
-        })
-        .then(res => res.json())
-        .then(data => {
-          if (data.success && data.score > 0.5) {
-            document.getElementById('complaints-container').style.display = 'block';
-          } else {
-            alert('No pudimos verificar que eres humano');
-          }
-        });
-      });
-    });
-  </script>
+                </div>
+                <div class="col">
+
+                    <% if (complaints.length> 0) { %>
+                        <table class=" table custom_table table-striped mt-4">
+                            <thead>
+                                <tr>
+                                    <th class="custom_th">Entidad</th>
+                                    <th class="custom_th">Descripción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% complaints.forEach(c=> { %>
+                                    <tr>
+                                        <td>
+                                            <%= c.public_entity %>
+                                        </td>
+                                        <td>
+                                            <%= c.description %>
+                                        </td>
+                                    </tr>
+                                    <% }) %>
+                            </tbody>
+                        </table>
+                        <% } else { %>
+                            <div class="alert alert-info">No hay quejas registradas.</div>
+                            <% } %>
+                                <div class="d-flex justify-content-center mt-4">
+                                    <a href="/generate-report" class="btn custom_button d-flex align-items-center">
+                                        Generar Reporte
+                                    </a>
+                                </div>
+
+
+                </div>
+
+
+
+                <script>
+                    grecaptcha.ready(function () {
+                        grecaptcha.execute('6Ld0TagrAAAAACNejDK0_2e_NdQxsTWR15btG5xs', { action: 'view_list' }).then(function (token) {
+                            fetch('/verify-captcha', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({ token })
+                            })
+                                .then(res => res.json())
+                                .then(data => {
+                                    if (data.success && data.score > 0.5) {
+                                        document.getElementById('complaints-container').style.display = 'block';
+                                    } else {
+                                        alert('No pudimos verificar que eres humano');
+                                    }
+                                });
+                        });
+                    });
+                </script>
 </body>
+
 </html>
