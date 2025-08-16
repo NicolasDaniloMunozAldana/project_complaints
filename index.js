@@ -1,5 +1,10 @@
 let express = require("express");
 let app = express();
+let axios = require("axios"); 
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+
 app.set("view engine", "ejs");
 
 const knex = require('knex')({
@@ -29,6 +34,28 @@ app.get("/complaints/list", (req, res) => {
       .catch(err => console.error(err));
 });
 
+app.post('/verify-captcha', async (req, res) => {
+  try {
+    const token = req.body.token;
+
+    if (!token) {
+      return res.status(400).json({ success: false, error: 'Token no enviado' });
+    }
+
+    const secretKey = "6Ld0TagrAAAAALCV5YxjmWEkppHaKN83Ab3kIXpK"; 
+    const url = `https://www.google.com/recaptcha/api/siteverify?secret=${secretKey}&response=${token}`;
+
+    const response = await fetch(url, { method: 'POST' });
+    const data = await response.json();
+
+    console.log('Respuesta de Google:', data); 
+
+    res.json(data); 
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: 'Error interno en verify-captcha' });
+  }
+});
 
 
 

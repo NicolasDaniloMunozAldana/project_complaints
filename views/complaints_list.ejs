@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <title>Lista de Quejas</title>
-  <!-- Bootstrap CSS -->
+  <script src="https://www.google.com/recaptcha/api.js?render=6Ld0TagrAAAAACNejDK0_2e_NdQxsTWR15btG5xs"></script>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="p-4">
 
-  <div class="container">
+  <div class="container" id="complaints-container" style="display:none;">
     <h1 class="mb-4">Lista de Quejas</h1>
 
     <% if (complaints.length > 0) { %>
@@ -17,7 +17,7 @@
           <tr>
             <th>Entidad</th>
             <th>Descripción</th>
-        </tr>
+          </tr>
         </thead>
         <tbody>
           <% complaints.forEach(c => { %>
@@ -33,5 +33,27 @@
     <% } %>
   </div>
 
+  <script>
+    grecaptcha.ready(function() {
+      grecaptcha.execute('6Ld0TagrAAAAACNejDK0_2e_NdQxsTWR15btG5xs', {action: 'view_list'}).then(function(token) {
+        // Llamamos al backend para validar el token
+        fetch('/verify-captcha', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ token })
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.score > 0.5) {
+            document.getElementById('complaints-container').style.display = 'block';
+          } else {
+            alert('No pudimos verificar que eres humano');
+          }
+        });
+      });
+    });
+  </script>
 </body>
 </html>
