@@ -1,0 +1,11 @@
+h1{
+    text-align: center;
+}
+
+
+table{
+      border-collapse: separate; /* importante para que funcione border-radius */
+  border-spacing: 0;          /* quita los espacios extra */
+  border-radius: 12px;        /* esquinas redondeadas */
+  overflow: hidden;           /* que los bordes corten los contenidos */
+}

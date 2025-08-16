@@ -1,6 +1,7 @@
 let express = require("express");
 let app = express();
 let axios = require("axios"); 
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -60,3 +61,4 @@ app.post('/verify-captcha', async (req, res) => {
 
 
 app.listen(3030);
+console.log("Servidor corriendo en http://localhost:3030");

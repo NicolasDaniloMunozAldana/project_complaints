@@ -1,19 +1,101 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8"> 
   <title>Lista de Quejas</title>
+  <link rel="stylesheet" href="/complaint_list_style.css">
+
   <script src="https://www.google.com/recaptcha/api.js?render=6Ld0TagrAAAAACNejDK0_2e_NdQxsTWR15btG5xs"></script>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+        <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .card-custom {
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+            transition: transform 0.2s;
+        }
+
+        .card-custom:hover {
+            transform: translateY(-4px) scale(1.03);
+        }
+
+        .icon-bg {
+            width: 80px;
+            height: 80px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px auto;
+            font-size: 2.5rem;
+        }
+
+        .icon-red {
+            background: #e74c3c;
+            color: #fff;
+        }
+
+        .icon-green {
+            background: #1abc9c;
+            color: #fff;
+        }
+
+        .title {
+            font-weight: 700;
+            font-size: 2rem;
+            margin-top: 20px;
+        }
+
+        .subtitle {
+            color: #6c757d;
+            margin-bottom: 40px;
+        }
+    </style>
+
 </head>
 <body class="p-4">
+    <nav class="navbar navbar-light bg-white shadow-sm mb-4">
+        <div class="container d-flex justify-content-center">
+            <span class="navbar-brand mb-0 h1 text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"
+                    fill="#2664eb">
+                    <path
+                        d="M200-280v-280h80v280h-80Zm240 0v-280h80v280h-80ZM80-120v-80h800v80H80Zm600-160v-280h80v280h-80ZM80-640v-80l400-200 400 200v80H80Z" />
+                </svg>
+                Quejas de Entidades Boyacá
+            </span>
+        </div>
+    </nav>
+
+    <div class="container text-center">
+        <div class="icon-bg icon-blue mb-3" style="background:#2664eb;">
+            <svg xmlns="http://www.w3.org/2000/svg" height="50px" viewBox="0 -960 960 960" width="50px" fill="#FFFFFF">
+                <path
+                    d="M160-120v-80h480v80H160Zm226-194L160-540l84-86 228 226-86 86Zm254-254L414-796l86-84 226 226-86 86Zm184 408L302-682l56-56 522 522-56 56Z" />
+            </svg>
+        </div>
+        <div class="title">Inicio</div>
+        <div class="subtitle">
+            Sistema web para radicar y consultar quejas ciudadanas sobre entidades públicas del departamento de Boyacá.
+        </div>
 
   <div class="container" id="complaints-container" style="display:none;">
-    <h1 class="mb-4">Lista de Quejas</h1>
+
+    <div class="row">
+
+
+    </div>
+    <div class="col">
+        <h1 class="mb-4">Lista de Quejas</h1>
 
     <% if (complaints.length > 0) { %>
-      <table class="table table-bordered table-striped">
-        <thead class="table-dark">
+      <table class="table table-bordered table-striped rounded-sm">
+        <thead>
           <tr>
             <th>Entidad</th>
             <th>Descripción</th>
@@ -31,8 +113,15 @@
     <% } else { %>
       <div class="alert alert-info">No hay quejas registradas.</div>
     <% } %>
+
+    <button>Generar reporte</button>
+
+    </div>
+    
   </div>
 
+
+  
   <script>
     grecaptcha.ready(function() {
       grecaptcha.execute('6Ld0TagrAAAAACNejDK0_2e_NdQxsTWR15btG5xs', {action: 'view_list'}).then(function(token) {
