@@ -19,5 +19,17 @@ app.get("/home", (req, res) => {
     });
 });
 
+app.get("/complaints/list", (req, res) => {
+    knex('COMPLAINTS as c')
+      .join('PUBLIC_ENTITYS as p', 'c.id_public_entity', 'p.id_public_entity')
+      .select('c.id_complaint', 'p.name as public_entity', 'c.description')
+      .then((results) => {
+          res.render("complaints_list", { complaints: results });
+      })
+      .catch(err => console.error(err));
+});
+
+
+
 
 app.listen(3030);

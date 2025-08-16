@@ -26,3 +26,14 @@ INSERT INTO PUBLIC_ENTITYS (id_public_entity, name) VALUES
 (4, 'Policía Nacional de Colombia'),
 (5, 'Registraduría Nacional del Estado Civil');
 
+INSERT INTO COMPLAINTS (id_complaint, id_public_entity, description) VALUES
+(1, 1, 'Falta de atención en el hospital local'),
+(2, 2, 'Problemas con la entrega de certificados académicos'),
+(3, 3, 'Carreteras en mal estado en la vía principal'),
+(4, 4, 'Demora en el trámite de antecedentes'),
+(5, 5, 'Errores en el registro civil de nacimiento'),
+(6, 1, 'Falta de medicamentos en la red hospitalaria'),
+(7, 2, 'Demora en la entrega de becas estudiantiles'),
+(8, 3, 'Señalización insuficiente en carreteras'),
+(9, 4, 'Falta de patrullaje en barrios residenciales'),
+(10, 5, 'Problemas en la inscripción de cédulas nuevas');
