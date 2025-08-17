@@ -13,7 +13,7 @@ const knex = require('knex')({
         host: 'localhost',
         port: 3306,
         user: 'root',
-        password: 'nicolas2004',
+        password: 'root123',
         database: 'dbcomplaints',
     },
 });
@@ -32,6 +32,40 @@ app.get("/complaints/list", (req, res) => {
           res.render("complaints_list", { complaints: results });
       })
       .catch(err => console.error(err));
+});
+
+// Nueva ruta para estadísticas de quejas por entidad
+app.get("/complaints/stats", (req, res) => {
+    knex('COMPLAINTS as c')
+      .join('PUBLIC_ENTITYS as p', 'c.id_public_entity', 'p.id_public_entity')
+      .select('p.name as public_entity')
+      .count('c.id_complaint as total_complaints')
+      .groupBy('p.id_public_entity', 'p.name')
+      .orderBy('total_complaints', 'desc')
+      .then((results) => {
+          res.render("complaints_stats", { stats: results });
+      })
+      .catch(err => {
+          console.error(err);
+          res.status(500).send('Error al obtener estadísticas');
+      });
+});
+
+// Nueva ruta para contar quejas por entidad
+app.get("/complaints/stats", (req, res) => {
+    knex('COMPLAINTS as c')
+      .join('PUBLIC_ENTITYS as p', 'c.id_public_entity', 'p.id_public_entity')
+      .select('p.name as public_entity')
+      .count('c.id_complaint as total_complaints')
+      .groupBy('p.id_public_entity', 'p.name')
+      .orderBy('total_complaints', 'desc')
+      .then((results) => {
+          res.render("complaints_stats", { stats: results });
+      })
+      .catch(err => {
+          console.error(err);
+          res.status(500).send('Error al obtener estadísticas');
+      });
 });
 
 app.post('/verify-captcha', async (req, res) => {
