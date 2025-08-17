@@ -51,7 +51,6 @@ app.get("/complaints/stats", (req, res) => {
       });
 });
 
-// Nueva ruta para contar quejas por entidad
 app.get("/complaints/stats", (req, res) => {
     knex('COMPLAINTS as c')
       .join('PUBLIC_ENTITYS as p', 'c.id_public_entity', 'p.id_public_entity')
