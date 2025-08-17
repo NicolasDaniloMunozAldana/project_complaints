@@ -5,7 +5,6 @@ let axios = require("axios");
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-
 app.set("view engine", "ejs");
 
 const knex = require('knex')({
@@ -43,22 +42,39 @@ app.post('/verify-captcha', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Token no enviado' });
     }
 
-    const secretKey = "6Ld0TagrAAAAALCV5YxjmWEkppHaKN83Ab3kIXpK"; 
-    const url = `https://www.google.com/recaptcha/api/siteverify?secret=${secretKey}&response=${token}`;
+    // reCAPTCHA v2 secret key
+    const secretKey = "6Le9BKkrAAAAAJmcLj6EBV5IAUdIFYmh9qs3TSqH"; 
+    
+    // Use axios or fetch to verify the token with Google
+    const response = await axios.post('https://www.google.com/recaptcha/api/siteverify', null, {
+      params: {
+        secret: secretKey,
+        response: token,
+        remoteip: req.ip // Optional: include the user's IP
+      }
+    });
 
-    const response = await fetch(url, { method: 'POST' });
-    const data = await response.json();
+    const data = response.data;
+    
+    console.log('Respuesta de Google reCAPTCHA v2:', data);
 
-    console.log('Respuesta de Google:', data); 
-
-    res.json(data); 
+    // For reCAPTCHA v2, we only need to check if success is true
+    // (v2 doesn't have a score like v3)
+    if (data.success) {
+      res.json({ success: true, message: 'Verificación exitosa' });
+    } else {
+      res.json({ 
+        success: false, 
+        error: 'Verificación fallida',
+        'error-codes': data['error-codes'] 
+      });
+    }
+    
   } catch (err) {
-    console.error(err);
+    console.error('Error en verify-captcha:', err);
     res.status(500).json({ success: false, error: 'Error interno en verify-captcha' });
   }
 });
-
-
 
 app.listen(3030);
 console.log("Servidor corriendo en http://localhost:3030");
