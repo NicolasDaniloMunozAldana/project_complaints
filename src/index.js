@@ -1,5 +1,8 @@
 let express = require("express");
 let app = express();
+let path = require("path");
+
+
 app.set("view engine", "ejs");
 
 app.use(express.urlencoded({ extended: true }));
@@ -25,8 +28,7 @@ app.get("/", (req, res) => {
 
 app.post("/file", (req, res) => {
     const { entity, description } = req.body;
-
-    if (!entity || !description) {
+    if (!entity || !description || isNaN(Number(entity))) {
         return knex.select().from("PUBLIC_ENTITYS").then((results) => {
             res.render("home", { 
                 entitys: results,
@@ -71,5 +73,8 @@ app.post("/file", (req, res) => {
         });
 });
 
+module.exports = app;
 
-app.listen(3030);
+if (require.main === module) {
+    app.listen(3030, () => console.log("Server started in port 3030"));
+}
