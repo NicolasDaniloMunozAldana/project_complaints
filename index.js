@@ -42,15 +42,13 @@ app.post('/verify-captcha', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Token no enviado' });
     }
 
-    // reCAPTCHA v2 secret key
     const secretKey = "6Le9BKkrAAAAAJmcLj6EBV5IAUdIFYmh9qs3TSqH"; 
     
-    // Use axios or fetch to verify the token with Google
     const response = await axios.post('https://www.google.com/recaptcha/api/siteverify', null, {
       params: {
         secret: secretKey,
         response: token,
-        remoteip: req.ip // Optional: include the user's IP
+        remoteip: req.ip
       }
     });
 
@@ -58,8 +56,6 @@ app.post('/verify-captcha', async (req, res) => {
     
     console.log('Respuesta de Google reCAPTCHA v2:', data);
 
-    // For reCAPTCHA v2, we only need to check if success is true
-    // (v2 doesn't have a score like v3)
     if (data.success) {
       res.json({ success: true, message: 'Verificación exitosa' });
     } else {
