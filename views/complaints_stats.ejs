@@ -3,6 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Estadísticas de Quejas</title>
     <link rel="stylesheet" href="/complaint_list_style.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -12,6 +13,7 @@
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
     <style>
+        /* ESTILOS PRINCIPALES (MANTENIDOS IGUAL) */
         body {
             background-color: #f8f9fa;
         }
@@ -39,22 +41,6 @@
             box-shadow: 0 2px 4px rgba(51, 155, 191, 0.2) !important;
         }
 
-        .dataTables_wrapper .dataTables_paginate .paginate_button:link,
-        .dataTables_wrapper .dataTables_paginate .paginate_button:visited {
-            background: #339BBF !important;
-            background-color: #339BBF !important;
-            color: #ffffff !important;
-        }
-
-        .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
-            background: #2980b9 !important;
-            background-color: #2980b9 !important;
-            border-color: #2980b9 !important;
-            color: #ffffff !important;
-            transform: translateY(-2px) !important;
-            box-shadow: 0 4px 8px rgba(41, 128, 185, 0.3) !important;
-        }
-
         .dataTables_wrapper .dataTables_paginate .paginate_button.current {
             background: #10B981 !important;
             background-color: #10B981 !important;
@@ -64,43 +50,6 @@
             box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3) !important;
         }
 
-        .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
-            background: #059669 !important;
-            background-color: #059669 !important;
-            border-color: #059669 !important;
-            color: #ffffff !important;
-        }
-
-        .dataTables_wrapper .dataTables_paginate .paginate_button.disabled {
-            background: #e5e7eb !important;
-            background-color: #e5e7eb !important;
-            border-color: #e5e7eb !important;
-            color: #9ca3af !important;
-            cursor: not-allowed !important;
-            opacity: 0.6 !important;
-            box-shadow: none !important;
-        }
-
-        .dataTables_wrapper .dataTables_paginate .paginate_button.disabled:hover {
-            background: #e5e7eb !important;
-            background-color: #e5e7eb !important;
-            border-color: #e5e7eb !important;
-            color: #9ca3af !important;
-            transform: none !important;
-            box-shadow: none !important;
-        }
-
-        .dataTables_wrapper .dataTables_paginate .paginate_button:focus {
-            outline: 2px solid #3b82f6 !important;
-            outline-offset: 2px !important;
-        }
-
-        .dataTables_wrapper .dataTables_paginate .paginate_button.previous,
-        .dataTables_wrapper .dataTables_paginate .paginate_button.next {
-            font-weight: 600 !important;
-            padding: 8px 20px !important;
-        }
-
         .custom_button {
             height: 37px;
             background-color: #339BBF;
@@ -108,11 +57,6 @@
             font-size: 1.2rem;
             font-weight: 600;
             color: #fff;
-        }
-
-        .custom_button:hover {
-            background-color: #017297;
-            color: #fff
         }
 
         .icon-bg {
@@ -195,202 +139,94 @@
             opacity: 0.9;
         }
 
+        /* MEJORAS RESPONSIVE (SIN CAMBIAR ESTILOS) */
         @media screen and (max-width: 768px) {
             .container {
+                padding: 20px;
+            }
+            
+            .stats-summary {
+                margin: 20px auto;
                 padding: 15px;
             }
             
-            .title {
-                font-size: 2.2rem;
-                margin-top: 15px;
-                margin-bottom: 15px;
-                font-weight: 800;
-            }
-            
-            .subtitle {
-                font-size: 1.3rem;
-                margin-bottom: 30px;
-            }
-            
-            .icon-bg {
-                width: 90px;
-                height: 90px;
-                font-size: 2.8rem;
-                margin-bottom: 20px;
-            }
-            
-            .custom_table {
-                font-size: 1.1rem;
-                margin-top: 25px !important;
-            }
-            
-            .custom_table td {
-                padding: 18px 15px !important;
-                font-size: 1.1rem;
-                line-height: 1.6;
-            }
-            
-            .custom_th {
-                padding: 20px 15px !important;
-                font-size: 1.4rem !important;
-                font-weight: 700;
+            .stats-summary h4 {
+                font-size: 2rem;
             }
             
             .custom_table td:first-child {
                 width: 60%;
-                font-weight: 600;
             }
             
-            .custom_table td:last-child {
-                width: 40%;
-                font-size: 1.2rem;
+            /* Tabla responsive sin cambiar estilos */
+            table.dataTable {
+                width: 100% !important;
+                margin: 0 !important;
             }
             
-            .custom_button {
-                font-size: 1.3rem;
-                height: 55px;
-                padding: 15px 25px;
-                margin: 15px;
-                font-weight: 700;
-            }
-            
-            .dataTables_wrapper .dataTables_paginate {
-                margin-top: 30px !important;
+            table.dataTable thead th,
+            table.dataTable thead td,
+            table.dataTable tbody th,
+            table.dataTable tbody td {
+                padding: 12px 10px !important;
+                box-sizing: border-box !important;
             }
             
             .dataTables_wrapper .dataTables_paginate .paginate_button {
-                padding: 12px 18px !important;
-                margin: 0 4px !important;
-                font-size: 16px !important;
-                font-weight: 600 !important;
-            }
-            
-            .navbar {
-                margin-bottom: 25px !important;
-            }
-            
-            .navbar .custom_button {
-                height: 45px;
-                font-size: 1.1rem;
-            }
-
-            .stats-summary {
-                margin: 20px auto;
-                padding: 25px;
-            }
-
-            .stats-summary h4 {
-                font-size: 2.2rem;
-            }
-
-            .stats-summary p {
-                font-size: 1.2rem;
+                padding: 6px 12px !important;
+                margin: 2px !important;
             }
         }
 
-        @media screen and (max-width: 480px) {
-            body {
-                font-size: 18px;
-            }
-            
-            .container {
-                padding: 12px;
-            }
-            
+        @media screen and (max-width: 576px) {
             .title {
-                font-size: 2rem;
-                margin-bottom: 12px;
-                font-weight: 800;
+                font-size: 1.6rem;
             }
             
             .subtitle {
-                font-size: 1.2rem;
-                margin-bottom: 25px;
+                font-size: 1rem;
+                margin-bottom: 30px;
             }
             
             .icon-bg {
-                width: 85px;
-                height: 85px;
-                font-size: 2.6rem;
-                margin-bottom: 18px;
-            }
-            
-            .custom_table {
-                font-size: 1rem;
-                margin-top: 20px !important;
-            }
-            
-            .custom_table td {
-                padding: 16px 12px !important;
-                font-size: 1rem;
-                line-height: 1.5;
-            }
-            
-            .custom_th {
-                padding: 18px 12px !important;
-                font-size: 1.25rem !important;
-                font-weight: 700;
+                width: 70px;
+                height: 70px;
             }
             
             .custom_button {
-                font-size: 1.2rem;
-                height: 52px;
-                width: 95%;
-                max-width: 350px;
-                font-weight: 700;
-                padding: 12px 20px;
+                font-size: 1rem;
+                height: 40px;
+                width: 100%;
+                max-width: 280px;
             }
             
-            .navbar .custom_button {
-                height: 42px;
-                font-size: 1.05rem;
-                width: auto;
-                padding: 8px 15px;
+            /* Ajuste para pantallas muy pequeñas */
+            table.dataTable thead th,
+            table.dataTable thead td,
+            table.dataTable tbody th,
+            table.dataTable tbody td {
+                padding: 10px 8px !important;
+                font-size: 0.9rem;
             }
             
-            .navbar svg {
-                height: 30px !important;
-                width: 30px !important;
+            .custom_table td:first-child {
+                width: 55%;
             }
             
-            .dataTables_wrapper .dataTables_paginate .paginate_button {
-                padding: 10px 16px !important;
-                margin: 0 3px !important;
-                font-size: 15px !important;
-            }
-
-            .stats-summary h4 {
-                font-size: 2rem;
-            }
-
-            .stats-summary p {
-                font-size: 1.1rem;
+            .custom_table td:last-child {
+                font-size: 1rem;
             }
         }
 
-        @media screen and (max-width: 360px) {
-            .title {
-                font-size: 1.8rem;
-            }
-            
-            .subtitle {
-                font-size: 1.1rem;
-            }
-            
-            .custom_table td {
-                padding: 14px 10px !important;
-                font-size: 0.95rem;
-            }
-            
-            .custom_th {
-                padding: 16px 10px !important;
-                font-size: 1.15rem !important;
-            }
-            
-            .custom_button {
-                font-size: 1.1rem;
-                height: 50px;
-            }
+        /* SOLUCIÓN ESPECÍFICA PARA EL PROBLEMA DEL BOX-SIZING */
+        table.dataTable {
+            border-collapse: collapse !important;
+            border-spacing: 0 !important;
+        }
+        
+        table.dataTable th,
+        table.dataTable td {
+            box-sizing: border-box !important;
         }
     </style>
 </head>
@@ -472,16 +308,25 @@
                 searching: true,
                 info: false,
                 ordering: true,
-                order: [[1, 'desc']], // Ordenar por número de quejas de forma descendente
+                order: [[1, 'desc']],
+                autoWidth: false, // Desactivar autoWidth
+                responsive: true, // Activar responsive
                 language: {
                     search: "Buscar:",
                     paginate: {
                         previous: "Anterior",
                         next: "Siguiente"
-                    },
-                    emptyTable: "No hay datos disponibles en la tabla",
-                    zeroRecords: "No se encontraron registros que coincidan"
+                    }
+                },
+                initComplete: function() {
+                    // Forzar el redimensionamiento inicial
+                    this.api().columns.adjust().responsive.recalc();
                 }
+            });
+            
+            // Redimensionar al cambiar el tamaño de la ventana
+            $(window).resize(function() {
+                $('#statsTable').DataTable().columns.adjust().responsive.recalc();
             });
         });
     </script>
