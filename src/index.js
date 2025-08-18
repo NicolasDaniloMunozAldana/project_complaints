@@ -4,6 +4,7 @@ let app = express();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+require('dotenv').config(); // Carga variables desde .env
 
 app.set("view engine", "ejs");
 
@@ -21,13 +22,14 @@ app.use(express.json());
 const knex = require('knex')({
     client: 'mysql2',
     connection: {
-        host: 'localhost',
-        port: 3306,
-        user: 'root',
-        password: 'nicolas2004',
-        database: 'dbcomplaints',
+        host: process.env.DB_HOST,
+        port: process.env.DB_PORT,
+        user: process.env.DB_USER,
+        password: process.env.DB_PASSWORD,
+        database: process.env.DB_NAME,
     },
 });
+
 
 app.locals.knex = knex;
 
@@ -61,7 +63,7 @@ app.post('/verify-captcha', async (req, res) => {
             return res.status(400).json({ success: false, error: 'Token no enviado' });
         }
 
-        const secretKey = "6Le9BKkrAAAAAJmcLj6EBV5IAUdIFYmh9qs3TSqH";
+        const secretKey = process.env.RECAPTCHA_SECRET;
 
         // Envío de la validación a Google
         const response = await axios.post('https://www.google.com/recaptcha/api/siteverify', null, {
@@ -170,5 +172,6 @@ module.exports = app;
 
 // Si se ejecuta directamente, iniciar el servidor
 if (require.main === module) {
-    app.listen(3030, () => console.log("Server started in port 3030"));
+    const PORT = process.env.PORT || 3030;
+    app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
 }
