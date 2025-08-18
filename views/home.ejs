@@ -1,14 +1,178 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Quejas de Entidades Boyacá</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .card-custom {
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+            transition: transform 0.2s;
+        }
+
+        .card-custom:hover {
+            transform: translateY(-4px) scale(1.03);
+        }
+
+        .icon-bg {
+            width: 80px;
+            height: 80px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px auto;
+            font-size: 2.5rem;
+        }
+
+        .icon-red {
+            background: #e74c3c;
+            color: #fff;
+        }
+
+        .icon-green {
+            background: #1abc9c;
+            color: #fff;
+        }
+
+        .title {
+            font-weight: 700;
+            font-size: 2rem;
+            margin-top: 20px;
+        }
+
+        .subtitle {
+            color: #6c757d;
+            margin-bottom: 40px;
+        }
+    </style>
 </head>
+
 <body>
-    Hola Mundo
-    <% for (let i = 0; i < entitys.length; i++) { %>
-        <h1><%= entitys[i].name %></h1>
+    <nav class="navbar navbar-light bg-white shadow-sm mb-4">
+        <div class="container d-flex justify-content-center">
+            <span class="navbar-brand mb-0 h1 text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"
+                    fill="#2664eb">
+                    <path
+                        d="M200-280v-280h80v280h-80Zm240 0v-280h80v280h-80ZM80-120v-80h800v80H80Zm600-160v-280h80v280h-80ZM80-640v-80l400-200 400 200v80H80Z" />
+                </svg>
+                Quejas de Entidades Boyacá
+            </span>
+        </div>
+    </nav>
+
+    <div class="container text-center">
+        <div class="icon-bg icon-blue mb-3" style="background:#2664eb;">
+            <svg xmlns="http://www.w3.org/2000/svg" height="50px" viewBox="0 -960 960 960" width="50px" fill="#FFFFFF">
+                <path
+                    d="M160-120v-80h480v80H160Zm226-194L160-540l84-86 228 226-86 86Zm254-254L414-796l86-84 226 226-86 86Zm184 408L302-682l56-56 522 522-56 56Z" />
+            </svg>
+        </div>
+        <div class="title">Inicio</div>
+        <div class="subtitle">
+            Sistema web para radicar y consultar quejas ciudadanas sobre entidades públicas del departamento de Boyacá.
+        </div>
+        <div class="row justify-content-center">
+            <div class="col-md-4 mb-3">
+                <div class="card card-custom py-4">
+                    <div class="icon-bg icon-red">
+                        <i class="bi bi-pencil-square"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2">Radicar Quejas</h5>
+                    <p class="text-muted mb-3">Presenta una nueva queja o denuncia ciudadana</p>
+                    <button type="button" class="btn btn-danger w-75 mx-auto" data-bs-toggle="modal"
+                        data-bs-target="#radicarQuejaModal">
+                        Radicar
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card card-custom py-4">
+                    <div class="icon-bg icon-green">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="50px" viewBox="0 -960 960 960" width="50px"
+                            fill="#FFFFFF">
+                            <path
+                                d="M320-280q17 0 28.5-11.5T360-320q0-17-11.5-28.5T320-360q-17 0-28.5 11.5T280-320q0 17 11.5 28.5T320-280Zm0-160q17 0 28.5-11.5T360-480q0-17-11.5-28.5T320-520q-17 0-28.5 11.5T280-480q0 17 11.5 28.5T320-440Zm0-160q17 0 28.5-11.5T360-640q0-17-11.5-28.5T320-680q-17 0-28.5 11.5T280-640q0 17 11.5 28.5T320-600Zm120 320h240v-80H440v80Zm0-160h240v-80H440v80Zm0-160h240v-80H440v80ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Z" />
+                        </svg>
+                    </div>
+                    <h5 class="fw-bold mb-2">Consultar Quejas</h5>
+                    <p class="text-muted mb-3">Revisa las quejas presentadas</p>
+                    <a href="/consultar" class="btn btn-success w-75 mx-auto">Consultar</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="radicarQuejaModal" tabindex="-1" aria-labelledby="radicarQuejaModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content"
+                style="background:#f2f6fa; border-radius:24px; box-shadow:0 6px 32px rgba(0,0,0,0.10); border:none;">
+                <div class="modal-body p-5 d-flex flex-column align-items-center">
+                    <div class="icon-bg mb-3"
+                        style="background:#e74c3c; color:#fff; width:90px; height:90px; border-radius:50%; display:flex; align-items:center; justify-content:center;">
+                        <i class="bi bi-pencil-square" style="font-size:2.8rem;"></i>
+                    </div>
+                    <h2 class="fw-bold text-center mb-2" style="color:#212529;">Radica tu queja</h2>
+                    <p class="text-muted text-center mb-4" style="font-size:1.1rem;">Registra tu queja de forma rápida y
+                        anónima.</p>
+                    <form action="/file" method="POST" class="w-100" style="max-width:600px;">
+                        <div class="mb-4 text-start">
+                            <label for="entity" class="form-label fw-bold" style="font-size:1.25rem;">Seleccionar
+                                Entidad</label>
+                            <select class="form-select" id="entity" name="entity" required
+                                style="border-radius:12px; font-size:1.1rem;">
+                                <option selected disabled value="">Seleccione una entidad</option>
+                                <% entitys.forEach(entity=> { %>
+                                    <option value="<%= entity.id_public_entity %>">
+                                        <%= entity.name %>
+                                    </option>
+                                    <% }) %>
+                            </select>
+                        </div>
+                        <div class="mb-4 text-start">
+                            <label for="description" class="form-label fw-bold" style="font-size:1.25rem;">Descripción
+                                de la Queja</label>
+                            <textarea class="form-control" id="description" name="description" rows="5"
+                                required minlength="10"></textarea>
+                        </div>
+                        <div class="d-flex justify-content-center">
+                            <button type="submit" class="btn fw-bold px-5 py-2"
+                                style="background:#2296c7; color:#fff; border-radius:12px; font-size:1.3rem; box-shadow:0 2px 8px rgba(34,150,199,0.10);">Enviar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <% if (typeof alert !== 'undefined') { %>
+    <script>
+        Swal.fire({
+            icon: '<%= alert.type %>',
+            title: '<%= alert.title %>',
+            text: '<%= alert.message %>',
+            confirmButtonColor: '#2296c7'
+        });
+    </script>
     <% } %>
 </body>
+
+
+
 </html>
