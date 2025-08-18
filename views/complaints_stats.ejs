@@ -1,30 +1,13 @@
-<!--
-Archivo: complaints_list.ejs
-Descripción:
-- Vista que permite consultar las quejas registradas en el sistema.
-- Protegida por reCAPTCHA: solo muestra la tabla tras validar al usuario.
-- Usa DataTables para mejorar la visualización, añadiendo paginación.
-- Recibe desde el servidor la variable 'complaints', que representa la lista de quejas.
-- Incluye opción para generar un reporte de todas las quejas.
-
-Dependencias:
-- Bootstrap 5.3.2
-- jQuery 3.7
-- DataTables 1.13.6
-- Google reCAPTCHA v2
--->
-
 <!DOCTYPE html>
 <html lang="es">
 
 <head>
     <meta charset="UTF-8">
-    <title>Lista de Quejas</title>
+    <title>Estadísticas de Quejas</title>
     <link rel="stylesheet" href="/complaint_list_style.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
@@ -165,6 +148,7 @@ Dependencias:
             border: none;
             color: #6c757d;
             font-size: 1rem;
+            text-align: center;
         }
 
         .custom_th {
@@ -177,47 +161,38 @@ Dependencias:
         }
 
         .custom_table td:first-child {
-            width: 50%;
+            width: 70%;
+            text-align: left;
         }
 
         .custom_table td:last-child {
-            text-align: left;
-            word-wrap: break-word;
-        }
-
-        .captcha-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin: 30px auto;
-            padding: 20px;
-            background-color: #fff;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            max-width: 400px;
-            width: 90%;
-        }
-
-        .captcha-wrapper {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-        }
-
-        .captcha-message {
             text-align: center;
-            margin-bottom: 20px;
-            color: #6c757d;
+            font-weight: 600;
+            color: #10B981;
             font-size: 1.1rem;
         }
 
-        .g-recaptcha {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transform-origin: 0 0;
+        .stats-summary {
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 30px auto;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .stats-summary h4 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+
+        .stats-summary p {
+            margin: 5px 0 0 0;
+            font-size: 1.1rem;
+            opacity: 0.9;
         }
 
         @media screen and (max-width: 768px) {
@@ -244,26 +219,6 @@ Dependencias:
                 margin-bottom: 20px;
             }
             
-            .captcha-container {
-                margin: 20px auto;
-                padding: 30px 20px;
-                width: 98%;
-                max-width: none;
-                border-radius: 15px;
-            }
-            
-            .captcha-message {
-                font-size: 1.4rem;
-                margin-bottom: 25px;
-                line-height: 1.5;
-                font-weight: 600;
-            }
-            
-            .g-recaptcha {
-                transform: scale(1.1);
-                transform-origin: center;
-            }
-            
             .custom_table {
                 font-size: 1.1rem;
                 margin-top: 25px !important;
@@ -282,13 +237,13 @@ Dependencias:
             }
             
             .custom_table td:first-child {
-                width: 40%;
+                width: 60%;
                 font-weight: 600;
             }
             
             .custom_table td:last-child {
-                width: 60%;
-                word-break: break-word;
+                width: 40%;
+                font-size: 1.2rem;
             }
             
             .custom_button {
@@ -318,6 +273,19 @@ Dependencias:
                 height: 45px;
                 font-size: 1.1rem;
             }
+
+            .stats-summary {
+                margin: 20px auto;
+                padding: 25px;
+            }
+
+            .stats-summary h4 {
+                font-size: 2.2rem;
+            }
+
+            .stats-summary p {
+                font-size: 1.2rem;
+            }
         }
 
         @media screen and (max-width: 480px) {
@@ -345,26 +313,6 @@ Dependencias:
                 height: 85px;
                 font-size: 2.6rem;
                 margin-bottom: 18px;
-            }
-            
-            .captcha-container {
-                margin: 15px auto;
-                padding: 25px 15px;
-                width: 99%;
-                border-radius: 12px;
-            }
-            
-            .captcha-message {
-                font-size: 1.25rem;
-                margin-bottom: 22px;
-                padding: 0 5px;
-                font-weight: 600;
-                line-height: 1.4;
-            }
-            
-            .g-recaptcha {
-                transform: scale(1.05);
-                transform-origin: center;
             }
             
             .custom_table {
@@ -410,6 +358,14 @@ Dependencias:
                 margin: 0 3px !important;
                 font-size: 15px !important;
             }
+
+            .stats-summary h4 {
+                font-size: 2rem;
+            }
+
+            .stats-summary p {
+                font-size: 1.1rem;
+            }
         }
 
         @media screen and (max-width: 360px) {
@@ -419,20 +375,6 @@ Dependencias:
             
             .subtitle {
                 font-size: 1.1rem;
-            }
-            
-            .captcha-container {
-                margin: 12px auto;
-                padding: 20px 12px;
-            }
-            
-            .captcha-message {
-                font-size: 1.15rem;
-                margin-bottom: 20px;
-            }
-            
-            .g-recaptcha {
-                transform: scale(1);
             }
             
             .custom_table td {
@@ -471,84 +413,77 @@ Dependencias:
         <div class="icon-bg icon-blue mb-3" style="background:#10B981;">
             <svg xmlns="http://www.w3.org/2000/svg" height="40" viewBox="0 0 24 24" width="40" fill="#fff">
                 <path d="M0 0h24v24H0z" fill="none" />
-                <path
-                    d="M19 5v14H5V5h14m1.1-2H3.9c-.5 0-.9.4-.9.9v16.2c0 .4.4.9.9.9h16.2c.4 0 .9-.5.9-.9V3.9c0-.5-.5-.9-.9-.9zM11 7h6v2h-6V7zm0 4h6v2h-6v-2zm0 4h6v2h-6zM7 7h2v2H7zm0 4h2v2H7zm0 4h2v2H7z" />
+                <path d="M3 3v18h18v-2H5V3H3zm18 14h-2V5h-8V3h10v14zm-4-4h-4v2h4v-2zm0-4h-4v2h4v-2zm0-4h-4v2h4v-2z"/>
             </svg>
         </div>
-        <div class="title">Consultar Quejas</div>
-        <div class="subtitle">Consultar las quejas realizadas y genera un reporte de todas ellas.</div>
+        <div class="title">Estadísticas de Quejas por Entidad</div>
+        <div class="subtitle">Número total de quejas registradas por cada entidad pública.</div>
 
-        <div class="captcha-container">
-            <div class="captcha-wrapper">
-                <div class="captcha-message">
-                    Por favor, verifica que eres humano para ver la lista de quejas
+        <div class="container">
+            <% if (stats.length > 0) { %>
+                <% 
+                    let totalComplaints = 0;
+                    stats.forEach(stat => {
+                        totalComplaints += parseInt(stat.total_complaints);
+                    });
+                %>
+                <div class="stats-summary">
+                    <h4><%= totalComplaints %></h4>
+                    <p>Total de quejas registradas</p>
                 </div>
-                <div class="g-recaptcha" data-sitekey="6Le9BKkrAAAAAMZo94h6oYaXGcPZ_eVYJ_biKgvA" data-callback="onCaptchaSuccess"></div>
-            </div>
-        </div>
 
-        <div class="container" id="complaints-container" style="display:none;">
-            <% if (complaints.length > 0) { %>
-            <table class="table custom_table table-striped mt-4">
-                <thead>
-                    <tr>
-                        <th class="custom_th">Entidad</th>
-                        <th class="custom_th">Descripción</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% complaints.forEach(c => { %>
-                    <tr>
-                        <td><%= c.public_entity %></td>
-                        <td><%= c.description %></td>
-                    </tr>
-                    <% }) %>
-                </tbody>
-            </table>
+                <table class="table custom_table table-striped mt-4" id="statsTable">
+                    <thead>
+                        <tr>
+                            <th class="custom_th">Entidad Pública</th>
+                            <th class="custom_th">Número de Quejas</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% stats.forEach(stat => { %>
+                        <tr>
+                            <td><%= stat.public_entity %></td>
+                            <td><%= stat.total_complaints %></td>
+                        </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
             <% } else { %>
-            <div class="alert alert-info">No hay quejas registradas.</div>
+                <div class="alert alert-info mt-4">No hay quejas registradas para mostrar estadísticas.</div>
             <% } %>
 
             <div class="d-flex justify-content-center mt-4 mb-4">
-                <a href="/complaints/stats" class="btn custom_button d-flex align-items-center">
-                    Generar Reporte
+                <a href="/complaints/list" class="btn custom_button d-flex align-items-center me-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 0 24 24" width="20" fill="#fff" class="me-2">
+                        <path d="M0 0h24v24H0z" fill="none"/>
+                        <path d="M19 5v14H5V5h14m1.1-2H3.9c-.5 0-.9.4-.9.9v16.2c0 .4.4.9.9.9h16.2c.4 0 .9-.5.9-.9V3.9c0-.5-.5-.9-.9-.9zM11 7h6v2h-6V7zm0 4h6v2h-6v-2zm0 4h6v2h-6zM7 7h2v2H7zm0 4h2v2H7zm0 4h2v2H7z"/>
+                    </svg>
+                    Ver Lista de Quejas
                 </a>
             </div>
         </div>
-    </div>
 
     <script>
-        function onCaptchaSuccess(token) {
-            fetch('/verify-captcha', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ token: token })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    document.querySelector('.captcha-container').style.display = 'none';
-                    document.getElementById('complaints-container').style.display = 'block';
-                    
-                    $('.custom_table').DataTable({
-                        paging: true,
-                        pageLength: 10,
-                        lengthChange: false,
-                        searching: false,
-                        info: false,
-                        ordering: false
-                    });
-                } else {
-                    alert('Verificación fallida. Por favor, intenta de nuevo.');
-                    grecaptcha.reset();
+        $(document).ready(function() {
+            $('#statsTable').DataTable({
+                paging: true,
+                pageLength: 10,
+                lengthChange: false,
+                searching: true,
+                info: false,
+                ordering: true,
+                order: [[1, 'desc']], // Ordenar por número de quejas de forma descendente
+                language: {
+                    search: "Buscar:",
+                    paginate: {
+                        previous: "Anterior",
+                        next: "Siguiente"
+                    },
+                    emptyTable: "No hay datos disponibles en la tabla",
+                    zeroRecords: "No se encontraron registros que coincidan"
                 }
-            })
-            .catch(err => {
-                console.error('Error:', err);
-                alert('Error al verificar. Por favor, intenta de nuevo.');
-                grecaptcha.reset();
             });
-        }
+        });
     </script>
 </body>
 
