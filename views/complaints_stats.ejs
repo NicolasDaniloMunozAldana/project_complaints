@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estadísticas de Quejas</title>
+    <link rel="stylesheet" href="/complaint_list_style.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+    <style>
+        /* ESTILOS PRINCIPALES (MANTENIDOS IGUAL) */
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .dataTables_wrapper .dataTables_paginate {
+            text-align: center !important;
+            margin-top: 20px !important;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            background: #339BBF !important;
+            background-color: #339BBF !important;
+            background-image: none !important;
+            border: 2px solid #339BBF !important;
+            border-radius: 8px !important;
+            color: #ffffff !important;
+            padding: 8px 16px !important;
+            margin: 0 4px !important;
+            font-weight: 500 !important;
+            font-size: 14px !important;
+            transition: all 0.3s ease !important;
+            cursor: pointer !important;
+            text-decoration: none !important;
+            display: inline-block !important;
+            box-shadow: 0 2px 4px rgba(51, 155, 191, 0.2) !important;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+            background: #10B981 !important;
+            background-color: #10B981 !important;
+            border-color: #10B981 !important;
+            color: #ffffff !important;
+            font-weight: 600 !important;
+            box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3) !important;
+        }
+
+        .custom_button {
+            height: 37px;
+            background-color: #339BBF;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .icon-bg {
+            width: 80px;
+            height: 80px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px auto;
+            font-size: 2.5rem;
+        }
+
+        .title {
+            font-weight: 700;
+            font-size: 2rem;
+            margin-top: 20px;
+        }
+
+        .subtitle {
+            color: #6c757d;
+            margin-bottom: 40px;
+        }
+
+        .custom_table {
+            border-radius: 20px;
+            overflow: hidden;
+            border: none;
+            width: 100% !important;
+        }
+
+        .custom_table td {
+            border: none;
+            color: #6c757d;
+            font-size: 1rem;
+            text-align: center;
+        }
+
+        .custom_th {
+            background-color: #10B981 !important;
+            color: #fff !important;
+            font-size: 1.2rem;
+            border: none !important;
+            font-weight: 600 !important;
+            text-align: center !important;
+        }
+
+        .custom_table td:first-child {
+            width: 70%;
+            text-align: left;
+        }
+
+        .custom_table td:last-child {
+            text-align: center;
+            font-weight: 600;
+            color: #10B981;
+            font-size: 1.1rem;
+        }
+
+        .stats-summary {
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 30px auto;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .stats-summary h4 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+
+        .stats-summary p {
+            margin: 5px 0 0 0;
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        /* MEJORAS RESPONSIVE (SIN CAMBIAR ESTILOS) */
+        @media screen and (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .stats-summary {
+                margin: 20px auto;
+                padding: 15px;
+            }
+            
+            .stats-summary h4 {
+                font-size: 2rem;
+            }
+            
+            .custom_table td:first-child {
+                width: 60%;
+            }
+            
+            /* Tabla responsive sin cambiar estilos */
+            table.dataTable {
+                width: 100% !important;
+                margin: 0 !important;
+            }
+            
+            table.dataTable thead th,
+            table.dataTable thead td,
+            table.dataTable tbody th,
+            table.dataTable tbody td {
+                padding: 12px 10px !important;
+                box-sizing: border-box !important;
+            }
+            
+            .dataTables_wrapper .dataTables_paginate .paginate_button {
+                padding: 6px 12px !important;
+                margin: 2px !important;
+            }
+        }
+
+        @media screen and (max-width: 576px) {
+            .title {
+                font-size: 1.6rem;
+            }
+            
+            .subtitle {
+                font-size: 1rem;
+                margin-bottom: 30px;
+            }
+            
+            .icon-bg {
+                width: 70px;
+                height: 70px;
+            }
+            
+            .custom_button {
+                font-size: 1rem;
+                height: 40px;
+                width: 100%;
+                max-width: 280px;
+            }
+            
+            /* Ajuste para pantallas muy pequeñas */
+            table.dataTable thead th,
+            table.dataTable thead td,
+            table.dataTable tbody th,
+            table.dataTable tbody td {
+                padding: 10px 8px !important;
+                font-size: 0.9rem;
+            }
+            
+            .custom_table td:first-child {
+                width: 55%;
+            }
+            
+            .custom_table td:last-child {
+                font-size: 1rem;
+            }
+        }
+
+        /* SOLUCIÓN ESPECÍFICA PARA EL PROBLEMA DEL BOX-SIZING */
+        table.dataTable {
+            border-collapse: collapse !important;
+            border-spacing: 0 !important;
+        }
+        
+        table.dataTable th,
+        table.dataTable td {
+            box-sizing: border-box !important;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-light bg-white shadow-sm mb-4">
+        <div class="container-fluid d-flex justify-content-start">
+            <a href="/" class="btn custom_button d-flex align-items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" height="35" viewBox="0 0 24 24" width="35" fill="#fff"
+                    class="me-2">
+                    <path d="M0 0h24v24H0z" fill="none" />
+                    <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
+                </svg>
+                Volver al inicio
+            </a>
+        </div>
+    </nav>
+
+    <div class="container text-center">
+        <div class="icon-bg icon-blue mb-3" style="background:#10B981;">
+            <svg xmlns="http://www.w3.org/2000/svg" height="40" viewBox="0 0 24 24" width="40" fill="#fff">
+                <path d="M0 0h24v24H0z" fill="none" />
+                <path d="M3 3v18h18v-2H5V3H3zm18 14h-2V5h-8V3h10v14zm-4-4h-4v2h4v-2zm0-4h-4v2h4v-2zm0-4h-4v2h4v-2z"/>
+            </svg>
+        </div>
+        <div class="title">Estadísticas de Quejas por Entidad</div>
+        <div class="subtitle">Número total de quejas registradas por cada entidad pública.</div>
+
+        <div class="container">
+            <% if (stats.length > 0) { %>
+                <% 
+                    let totalComplaints = 0;
+                    stats.forEach(stat => {
+                        totalComplaints += parseInt(stat.total_complaints);
+                    });
+                %>
+                <div class="stats-summary">
+                    <h4><%= totalComplaints %></h4>
+                    <p>Total de quejas registradas</p>
+                </div>
+
+                <table class="table custom_table table-striped mt-4" id="statsTable">
+                    <thead>
+                        <tr>
+                            <th class="custom_th">Entidad Pública</th>
+                            <th class="custom_th">Número de Quejas</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% stats.forEach(stat => { %>
+                        <tr>
+                            <td><%= stat.public_entity %></td>
+                            <td><%= stat.total_complaints %></td>
+                        </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            <% } else { %>
+                <div class="alert alert-info mt-4">No hay quejas registradas para mostrar estadísticas.</div>
+            <% } %>
+
+            <div class="d-flex justify-content-center mt-4 mb-4">
+                <a href="/complaints/list" class="btn custom_button d-flex align-items-center me-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 0 24 24" width="20" fill="#fff" class="me-2">
+                        <path d="M0 0h24v24H0z" fill="none"/>
+                        <path d="M19 5v14H5V5h14m1.1-2H3.9c-.5 0-.9.4-.9.9v16.2c0 .4.4.9.9.9h16.2c.4 0 .9-.5.9-.9V3.9c0-.5-.5-.9-.9-.9zM11 7h6v2h-6V7zm0 4h6v2h-6v-2zm0 4h6v2h-6zM7 7h2v2H7zm0 4h2v2H7zm0 4h2v2H7z"/>
+                    </svg>
+                    Ver Lista de Quejas
+                </a>
+            </div>
+        </div>
+
+    <script>
+        $(document).ready(function() {
+            $('#statsTable').DataTable({
+                paging: true,
+                pageLength: 10,
+                lengthChange: false,
+                searching: true,
+                info: false,
+                ordering: true,
+                order: [[1, 'desc']],
+                autoWidth: false, // Desactivar autoWidth
+                responsive: true, // Activar responsive
+                language: {
+                    search: "Buscar:",
+                    paginate: {
+                        previous: "Anterior",
+                        next: "Siguiente"
+                    }
+                },
+                initComplete: function() {
+                    // Forzar el redimensionamiento inicial
+                    this.api().columns.adjust().responsive.recalc();
+                }
+            });
+            
+            // Redimensionar al cambiar el tamaño de la ventana
+            $(window).resize(function() {
+                $('#statsTable').DataTable().columns.adjust().responsive.recalc();
+            });
+        });
+    </script>
+</body>
+
+</html>
