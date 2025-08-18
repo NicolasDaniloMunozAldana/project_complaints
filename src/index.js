@@ -1,7 +1,6 @@
 // Importación de dependencias principales
 let express = require("express");
 let app = express();
-let axios = require("axios"); 
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -25,12 +24,12 @@ const knex = require('knex')({
         host: 'localhost',
         port: 3306,
         user: 'root',
-        password: 'root123',
+        password: 'nicolas2004',
         database: 'dbcomplaints',
     },
 });
 
-
+app.locals.knex = knex;
 
 // ========================== RUTAS ==========================
 
@@ -44,57 +43,57 @@ app.get("/", (req, res) => {
 // Ruta para listar todas las quejas registradas junto con su entidad
 app.get("/complaints/list", (req, res) => {
     knex('COMPLAINTS as c')
-      .join('PUBLIC_ENTITYS as p', 'c.id_public_entity', 'p.id_public_entity')
-      .select('c.id_complaint', 'p.name as public_entity', 'c.description')
-      .then((results) => {
-          res.render("complaints_list", { complaints: results });
-      })
-      .catch(err => console.error(err));
+        .join('PUBLIC_ENTITYS as p', 'c.id_public_entity', 'p.id_public_entity')
+        .select('c.id_complaint', 'p.name as public_entity', 'c.description')
+        .then((results) => {
+            res.render("complaints_list", { complaints: results });
+        })
+        .catch(err => console.error(err));
 });
 
 // Ruta para verificar el token de Google reCAPTCHA (v2)
 app.post('/verify-captcha', async (req, res) => {
-  try {
-    const token = req.body.token;
+    try {
+        const token = req.body.token;
 
         // Si no se envía token da error inmediato.
-    if (!token) {
-      return res.status(400).json({ success: false, error: 'Token no enviado' });
-    }
+        if (!token) {
+            return res.status(400).json({ success: false, error: 'Token no enviado' });
+        }
 
-    const secretKey = "6Le9BKkrAAAAAJmcLj6EBV5IAUdIFYmh9qs3TSqH"; 
-    
+        const secretKey = "6Le9BKkrAAAAAJmcLj6EBV5IAUdIFYmh9qs3TSqH";
+
         // Envío de la validación a Google
-    const response = await axios.post('https://www.google.com/recaptcha/api/siteverify', null, {
-      params: {
-        secret: secretKey,
-        response: token,
-        remoteip: req.ip
-      }
-    });
+        const response = await axios.post('https://www.google.com/recaptcha/api/siteverify', null, {
+            params: {
+                secret: secretKey,
+                response: token,
+                remoteip: req.ip
+            }
+        });
 
-    const data = response.data;
-    
-    console.log('Respuesta de Google reCAPTCHA v2:', data);
+        const data = response.data;
 
-    if (data.success) {
-              // Validación exitosa, significa que el usuario es humano.
+        console.log('Respuesta de Google reCAPTCHA v2:', data);
 
-      res.json({ success: true, message: 'Verificación exitosa' });
-    } else {
-              // Validación fallida, significa que posiblemente el usuario es un bot.
+        if (data.success) {
+            // Validación exitosa, significa que el usuario es humano.
 
-      res.json({ 
-        success: false, 
-        error: 'Verificación fallida',
-        'error-codes': data['error-codes'] 
-      });
+            res.json({ success: true, message: 'Verificación exitosa' });
+        } else {
+            // Validación fallida, significa que posiblemente el usuario es un bot.
+
+            res.json({
+                success: false,
+                error: 'Verificación fallida',
+                'error-codes': data['error-codes']
+            });
+        }
+
+    } catch (err) {
+        console.error('Error en verify-captcha:', err);
+        res.status(500).json({ success: false, error: 'Error interno en verify-captcha' });
     }
-    
-  } catch (err) {
-    console.error('Error en verify-captcha:', err);
-    res.status(500).json({ success: false, error: 'Error interno en verify-captcha' });
-  }
 });
 
 // Ruta para registrar una nueva queja
@@ -102,7 +101,7 @@ app.post("/file", (req, res) => {
     const { entity, description } = req.body;
     if (!entity || !description || isNaN(Number(entity))) {
         return knex.select().from("PUBLIC_ENTITYS").then((results) => {
-            res.render("home", { 
+            res.render("home", {
                 entitys: results,
                 alert: {
                     type: 'error',
@@ -113,7 +112,7 @@ app.post("/file", (req, res) => {
         });
     }
 
-        // Inserción de la queja en la BD
+    // Inserción de la queja en la BD
     knex("COMPLAINTS")
         .insert({
             id_public_entity: parseInt(entity),
@@ -121,7 +120,7 @@ app.post("/file", (req, res) => {
         })
         .then(() => {
             knex.select().from("PUBLIC_ENTITYS").then((results) => {
-                res.render("home", { 
+                res.render("home", {
                     entitys: results,
                     alert: {
                         type: 'success',
@@ -134,7 +133,7 @@ app.post("/file", (req, res) => {
         .catch(err => {
             console.error(err);
             knex.select().from("PUBLIC_ENTITYS").then((results) => {
-                res.render("home", { 
+                res.render("home", {
                     entitys: results,
                     alert: {
                         type: 'error',
@@ -143,6 +142,25 @@ app.post("/file", (req, res) => {
                     }
                 });
             });
+        });
+});
+
+
+// Ruta para estadísticas de quejas por entidad
+app.get("/complaints/stats", (req, res) => {
+    const db = req.app.locals.knex;
+    db('COMPLAINTS as c')
+        .join('PUBLIC_ENTITYS as p', 'c.id_public_entity', 'p.id_public_entity')
+        .select('p.name as public_entity')
+        .count('c.id_complaint as total_complaints')
+        .groupBy('p.id_public_entity', 'p.name')
+        .orderBy('total_complaints', 'desc')
+        .then((results) => {
+            res.render("complaints_stats", { stats: results });
+        })
+        .catch(err => {
+            console.error(err);
+            res.status(500).send('Error al obtener estadísticas');
         });
 });
 
