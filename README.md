@@ -31,7 +31,6 @@ project_complaints/
 │   └── home.ejs
 └── .github/
     └── workflows/
-```
 
 ## Instalación
 1. Clona el repositorio.
@@ -66,4 +65,3 @@ npm test
 - Luis Enrique Hernández Valbuena 
 - Kevin Johann Jimenez Poveda 
 - Nicolas Danilo Muñoz 
-
