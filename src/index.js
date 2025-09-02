@@ -14,9 +14,6 @@ let axios = require("axios");  // Usado para hacer peticiones HTTP (ej: a Google
 // Configuración del motor de plantillas
 app.set("view engine", "ejs");
 
-// Middleware para procesar datos de formularios y JSON
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
 
 // Configuración de conexión a la base de datos con Knex
 const knex = require('knex')({
@@ -32,6 +29,9 @@ const knex = require('knex')({
 
 
 app.locals.knex = knex;
+
+const emailNotifications = require('./middleware/emailNotifications');
+app.use(emailNotifications);
 
 // ========================== RUTAS ==========================
 
@@ -175,3 +175,4 @@ if (require.main === module) {
     const PORT = process.env.PORT || 3030;
     app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
 }
+

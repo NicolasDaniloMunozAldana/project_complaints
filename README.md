@@ -1,25 +1,18 @@
-# 📌 Project Complaints
+# Project Complaints
 
-**Project Complaints** es una aplicación web para la **gestión y visualización de quejas**, desarrollada como parte de un curso de **Ingeniería de Software**.  
-Permite listar, analizar estadísticas y gestionar quejas de manera eficiente, con un backend robusto y vistas dinámicas.
+Este proyecto es una aplicación web para la gestión y visualización de quejas, desarrollada como parte de un curso de Ingeniería de Software.
 
----
+## Características principales
+- Listado de quejas
+- Estadísticas de quejas
+- Página de inicio
+- Backend con Express y Knex
+- Base de datos MySQL
+- Vistas con EJS
+- Pruebas con Jest y Supertest
 
-## 🚀 Características principales
-
-✅ Listado de quejas  
-📊 Estadísticas de quejas  
-🏠 Página de inicio  
-🖥️ Backend con **Express** y **Knex**  
-🗄️ Base de datos **MySQL**  
-🎨 Vistas con **EJS**  
-🧪 Pruebas automatizadas con **Jest** y **Supertest**  
-
----
-
-## 📂 Estructura del proyecto
-
-```bash
+## Estructura del proyecto
+```
 project_complaints/
 ├── package.json
 ├── package-lock.json
@@ -38,60 +31,37 @@ project_complaints/
 │   └── home.ejs
 └── .github/
     └── workflows/
-🔧 Instalación
 
-Clona el repositorio
+## Instalación
+1. Clona el repositorio.
+2. Instala las dependencias:
+   ```powershell
+   npm install
+   ```
+3. Configura el archivo `.env` con tus credenciales de base de datos MySQL.
+4. Importa el archivo `sources/dbcomplaints.sql` en tu base de datos.
 
-git clone <URL-del-repositorio>
-cd project_complaints
-
-
-Instala las dependencias
-
-npm install
-
-
-Configura el archivo .env con tus credenciales de base de datos MySQL.
-
-Importa la base de datos
-
-mysql -u <usuario> -p <nombre_base_datos> < sources/dbcomplaints.sql
-
-▶️ Uso
-
+## Uso
 Para iniciar el servidor:
-
+```powershell
 node src/index.js
+```
 
-
-El servidor quedará corriendo en:
-
-http://localhost:3000
-
-🧪 Pruebas
-
-Para ejecutar las pruebas automatizadas:
-
+## Pruebas
+Para ejecutar las pruebas:
+```powershell
 npm test
+```
 
-📦 Dependencias principales
+## Dependencias principales
+- express
+- knex
+- mysql2
+- ejs
+- axios
+- dotenv
 
-express
-
-knex
-
-mysql2
-
-ejs
-
-axios
-
-dotenv
-
-👨‍💻 Autores
-
-Luis Enrique Hernández Valbuena
-
-Kevin Johann Jimenez Poveda
-
-Nicolas Danilo Muñoz
+## Autor
+- Luis Enrique Hernández Valbuena 
+- Kevin Johann Jimenez Poveda 
+- Nicolas Danilo Muñoz 
