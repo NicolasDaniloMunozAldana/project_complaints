@@ -62,6 +62,40 @@ La estructura sugerida para la descripción de los pull requests y el contenido 
 - Menciona cualquier mejora, limitación o riesgo potencial.
 
 ### Ejemplo: 
+
+**Title**
+  
+feat: Decoupled Email Architecture with Gmail Support
+
+**Description**
+  
+Implemented a decoupled architecture for email services.
+Created the IEmailService interface to define the email service contract.
+
+Implemented GmailEmailService with credential validation and email sending.
+
+Introduced EmailServiceFactory to manage service instances (using the Singleton pattern).
+
+Added a compatibility layer in emailService.js to preserve existing functionality.
+Documented the new architecture in EMAIL_ARCHITECTURE.md and added a summary in RESUMEN_IMPLEMENTACION.md.
+Added demo scripts and integration tests to validate functionality.
+
+**Goal**
+
+Decouple email sending logic to allow future integrations with different providers.
+
+Improve maintainability and scalability of the email module.
+
+Ensure backward compatibility with the previous implementation without breaking existing features.
+
+**Impact**
+
+Users: No immediate visible changes, since the compatibility layer preserves current behavior.
+
+System: Now supports extensibility to other email providers without requiring changes to the existing code.
+
+Risks: Credential validation in GmailEmailService may require adjustments in environments using Gmail-specific configurations (OAuth, app passwords).
+
 ## Uso
 Para iniciar el servidor:
 ```powershell
