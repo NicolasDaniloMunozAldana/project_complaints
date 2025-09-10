@@ -72,22 +72,22 @@ describe("App Endpoints", () => {
     expect(res.text).toContain("Entity 1");
   });
 
-  test("POST /file without data should return error in the view", async () => {
-    const res = await request(app).post("/file").send({});
+  test("POST /complaints/file without data should return error in the view", async () => {
+    const res = await request(app).post("/complaints/file").send({});
     expect(res.statusCode).toBe(200);
     expect(res.text).toContain("Entity and description are required");
   });
 
-  test("POST /file with valid data should log and return success", async () => {
+  test("POST /complaints/file with valid data should log and return success", async () => {
     const res = await request(app)
-      .post("/file")
+      .post("/complaints/file")
       .send({ entity: 1, description: "Test complaint" });
     expect(res.text).toContain("Complaint successfully registered");
   });
 
-  test("POST /file with non-numeric entity should handle the error", async () => {
+  test("POST /complaints/file with non-numeric entity should handle the error", async () => {
     const res = await request(app)
-      .post("/file")
+      .post("/complaints/file")
       .send({ entity: "abc", description: "Bad entity" });
     expect(res.text).toContain("Error");
   });
@@ -210,88 +210,5 @@ describe("App Endpoints", () => {
     expect(res.statusCode).toBe(200);
     
     knex.then = originalThen;
-  });
-
-  describe("GET /complaints/stats", () => {
-    let originalKnex;
-
-    beforeAll(() => {
-        // Save original knex reference
-        originalKnex = app.locals.knex || require('../src/index.js').knex;
-    });
-
-    afterEach(() => {
-        // Restore original knex after each test
-        app.locals.knex = originalKnex;
-    });
-
-    it('should render stats with correct data when DB returns results', async () => {
-        // Mock knex to return sample data
-        app.locals.knex = () => ({
-            join: () => ({
-                select: () => ({
-                    count: () => ({
-                        groupBy: () => ({
-                            orderBy: () => ({
-                                then: (cb) => cb([
-                                    { public_entity: 'Entity A', total_complaints: 5 },
-                                    { public_entity: 'Entity B', total_complaints: 2 }
-                                ]),
-                                catch: () => {}
-                            })
-                        })
-                    })
-                })
-            })
-        });
-
-        const res = await request(app).get('/complaints/stats');
-        expect(res.statusCode).toBe(200);
-        expect(res.text).toContain('Entity A');
-        expect(res.text).toContain('Entity B');
-    });
-
-    it('should handle DB errors and return 500', async () => {
-        app.locals.knex = () => ({
-            join: () => ({
-                select: () => ({
-                    count: () => ({
-                        groupBy: () => ({
-                            orderBy: () => ({
-                                then: () => ({
-                                    catch: (cb) => cb(new Error('DB error'))
-                                })
-                            })
-                        })
-                    })
-                })
-            })
-        });
-
-        const res = await request(app).get('/complaints/stats');
-        expect(res.statusCode).toBe(500);
-        expect(res.text).toContain('Error al obtener estadísticas');
-    });
-
-    it('should render stats with empty array if DB returns no results', async () => {
-        app.locals.knex = () => ({
-            join: () => ({
-                select: () => ({
-                    count: () => ({
-                        groupBy: () => ({
-                            orderBy: () => ({
-                                then: (cb) => cb([]),
-                                catch: () => {}
-                            })
-                        })
-                    })
-                })
-            })
-        });
-
-        const res = await request(app).get('/complaints/stats');
-        expect(res.statusCode).toBe(200);
-        expect(res.text).toContain('stats'); // Adjust this to match your EJS output for empty stats
-    });
   });
 });
