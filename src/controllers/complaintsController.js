@@ -10,6 +10,10 @@ exports.listComplaints = (req, res) => {
         .catch(err => console.error(err));
 };
 
+
+// Importar constantes
+const { PARSE_BASE } = require('../config/constants');
+
 exports.fileComplaint = (req, res) => {
     const { entity, description } = req.body;
     if (!entity || !description || isNaN(Number(entity))) {
@@ -26,7 +30,7 @@ exports.fileComplaint = (req, res) => {
     }
     knex('COMPLAINTS')
         .insert({
-            id_public_entity: parseInt(entity),
+            id_public_entity: parseInt(entity, PARSE_BASE),
             description: description,
         })
         .then(() => {

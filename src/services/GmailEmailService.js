@@ -5,6 +5,11 @@ const IEmailService = require('../interfaces/IEmailService');
  * Implementación del servicio de correo para Gmail
  * Extiende la interfaz IEmailService
  */
+
+
+// Importar constantes
+const { GMAIL, EMAIL_TEMPLATE } = require('../config/constants');
+
 class GmailEmailService extends IEmailService {
   constructor() {
     super();
@@ -35,8 +40,8 @@ class GmailEmailService extends IEmailService {
         pass: process.env.EMAIL_PASSWORD
       },
       pool: true, // Usar pool de conexiones para mejor rendimiento
-      maxConnections: 5,
-      maxMessages: 100
+  maxConnections: GMAIL.MAX_CONNECTIONS,
+  maxMessages: GMAIL.MAX_MESSAGES
     });
   }
 
@@ -57,9 +62,9 @@ class GmailEmailService extends IEmailService {
             font-family: Arial, sans-serif;
             line-height: 1.6;
             color: #333;
-            max-width: 600px;
+            max-width: ${EMAIL_TEMPLATE.MAX_WIDTH}px;
             margin: 0 auto;
-            padding: 20px;
+            padding: ${EMAIL_TEMPLATE.PADDING}px;
             background-color: #f4f4f4;
           }
           .container {
@@ -71,15 +76,15 @@ class GmailEmailService extends IEmailService {
           .header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 20px;
+            padding: ${EMAIL_TEMPLATE.PADDING}px;
             text-align: center;
           }
           .header h2 {
             margin: 0;
-            font-size: 24px;
+            font-size: ${EMAIL_TEMPLATE.HEADER_FONT_SIZE}px;
           }
           .content {
-            padding: 30px;
+            padding: ${EMAIL_TEMPLATE.CONTENT_PADDING}px;
           }
           .content h3 {
             color: #333;
@@ -87,17 +92,17 @@ class GmailEmailService extends IEmailService {
             margin-bottom: 20px;
           }
           .detail-row {
-            margin-bottom: 15px;
-            padding: 10px;
+            margin-bottom: ${EMAIL_TEMPLATE.DETAIL_ROW_MARGIN_BOTTOM}px;
+            padding: ${EMAIL_TEMPLATE.DETAIL_ROW_PADDING}px;
             background-color: #f8f9fa;
-            border-left: 4px solid #667eea;
+            border-left: ${EMAIL_TEMPLATE.DETAIL_ROW_BORDER_LEFT}px solid #667eea;
             border-radius: 4px;
           }
           .label {
             font-weight: bold;
             color: #555;
             display: inline-block;
-            min-width: 120px;
+            min-width: ${EMAIL_TEMPLATE.LABEL_MIN_WIDTH}px;
           }
           .value {
             color: #333;

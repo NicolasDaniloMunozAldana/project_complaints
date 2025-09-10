@@ -27,12 +27,16 @@ const complaintsRoutes = require('./routes/complaintsRoutes');
 app.use('/', homeRoutes);
 app.use('/complaints', complaintsRoutes);
 
+
+// Importar constantes
+const { HTTP_STATUS, DEFAULT_PORT } = require('./config/constants');
+
 // Ruta para verificar el token de Google reCAPTCHA (v2)
 app.post('/verify-captcha', async (req, res) => {
     try {
         const token = req.body.token;
         if (!token) {
-            return res.status(400).json({ success: false, error: 'Token no enviado' });
+            return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, error: 'Token no enviado' });
         }
         const secretKey = process.env.RECAPTCHA_SECRET;
         const response = await axios.post('https://www.google.com/recaptcha/api/siteverify', null, {
@@ -55,7 +59,7 @@ app.post('/verify-captcha', async (req, res) => {
         }
     } catch (err) {
         console.error('Error en verify-captcha:', err);
-        res.status(500).json({ success: false, error: 'Error interno en verify-captcha' });
+    res.status(HTTP_STATUS.INTERNAL_ERROR).json({ success: false, error: 'Error interno en verify-captcha' });
     }
 });
 
@@ -64,7 +68,7 @@ module.exports = app;
 
 // Si se ejecuta directamente, iniciar el servidor
 if (require.main === module) {
-    const PORT = process.env.PORT || 3030;
+    const PORT = process.env.PORT || DEFAULT_PORT;
     app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
 }
 
