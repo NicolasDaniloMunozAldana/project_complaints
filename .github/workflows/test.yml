@@ -1,4 +1,4 @@
-name: Run Tests
+name: CI
 
 on:
   pull_request:
@@ -7,7 +7,7 @@ on:
     branches: [ develop ]
 
 jobs:
-  test:
+  lint-and-test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
@@ -19,8 +19,10 @@ jobs:
           node-version: '18'
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
 
       - name: Run tests
         run: npm test
-
