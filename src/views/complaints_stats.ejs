@@ -228,15 +228,28 @@
         table.dataTable td {
             box-sizing: border-box !important;
         }
+
+        /* CLASE PARA ACCESIBILIDAD - SCREEN READERS ONLY */
+        .sr-only {
+            position: absolute !important;
+            width: 1px !important;
+            height: 1px !important;
+            padding: 0 !important;
+            margin: -1px !important;
+            overflow: hidden !important;
+            clip: rect(0, 0, 0, 0) !important;
+            white-space: nowrap !important;
+            border: 0 !important;
+        }
     </style>
 </head>
 
 <body>
-    <nav class="navbar navbar-light bg-white shadow-sm mb-4">
+    <nav class="navbar navbar-light bg-white shadow-sm mb-4" role="navigation" aria-label="Navegación principal">
         <div class="container-fluid d-flex justify-content-start">
-            <a href="/" class="btn custom_button d-flex align-items-center">
+            <a href="/" class="btn custom_button d-flex align-items-center" role="button" aria-label="Volver al inicio">
                 <svg xmlns="http://www.w3.org/2000/svg" height="35" viewBox="0 0 24 24" width="35" fill="#fff"
-                    class="me-2">
+                    class="me-2" aria-hidden="true">
                     <path d="M0 0h24v24H0z" fill="none" />
                     <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
                 </svg>
@@ -246,88 +259,152 @@
     </nav>
 
     <div class="container text-center">
-        <div class="icon-bg icon-blue mb-3" style="background:#10B981;">
-            <svg xmlns="http://www.w3.org/2000/svg" height="40" viewBox="0 0 24 24" width="40" fill="#fff">
-                <path d="M0 0h24v24H0z" fill="none" />
-                <path d="M3 3v18h18v-2H5V3H3zm18 14h-2V5h-8V3h10v14zm-4-4h-4v2h4v-2zm0-4h-4v2h4v-2zm0-4h-4v2h4v-2z"/>
-            </svg>
-        </div>
-        <div class="title">Estadísticas de Quejas por Entidad</div>
-        <div class="subtitle">Número total de quejas registradas por cada entidad pública.</div>
+        <header class="page-header">
+            <div class="icon-bg icon-blue mb-3" style="background:#10B981;">
+                <svg xmlns="http://www.w3.org/2000/svg" height="40" viewBox="0 0 24 24" width="40" fill="#fff" aria-hidden="true">
+                    <path d="M0 0h24v24H0z" fill="none" />
+                    <path d="M3 3v18h18v-2H5V3H3zm18 14h-2V5h-8V3h10v14zm-4-4h-4v2h4v-2zm0-4h-4v2h4v-2zm0-4h-4v2h4v-2z"/>
+                </svg>
+            </div>
+            <h1 class="title">Estadísticas de Quejas por Entidad</h1>
+            <p class="subtitle">Número total de quejas registradas por cada entidad pública.</p>
+        </header>
 
-        <div class="container">
-            <% if (stats.length > 0) { %>
+        <main class="stats-content">
+            <% if (stats && stats.length > 0) { %>
                 <% 
-                    let totalComplaints = 0;
-                    stats.forEach(stat => {
-                        totalComplaints += parseInt(stat.total_complaints);
-                    });
+                    // Calcular total de quejas de manera más segura
+                    const totalComplaints = stats.reduce((total, stat) => {
+                        const complaints = parseInt(stat.total_complaints, 10) || 0;
+                        return total + complaints;
+                    }, 0);
                 %>
-                <div class="stats-summary">
-                    <h4><%= totalComplaints %></h4>
+                <div class="stats-summary" role="complementary" aria-label="Resumen de estadísticas">
+                    <h2><%= totalComplaints %></h2>
                     <p>Total de quejas registradas</p>
                 </div>
 
-                <table class="table custom_table table-striped mt-4" id="statsTable">
-                    <thead>
-                        <tr>
-                            <th class="custom_th">Entidad Pública</th>
-                            <th class="custom_th">Número de Quejas</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% stats.forEach(stat => { %>
-                        <tr>
-                            <td><%= stat.public_entity %></td>
-                            <td><%= stat.total_complaints %></td>
-                        </tr>
-                        <% }) %>
-                    </tbody>
-                </table>
+                <section class="stats-table-section" aria-labelledby="table-title">
+                    <h2 id="table-title" class="sr-only">Tabla de estadísticas por entidad</h2>
+                    <table class="table custom_table table-striped mt-4" id="statsTable" 
+                           role="table" aria-label="Estadísticas de quejas por entidad pública">
+                        <thead>
+                            <tr>
+                                <th class="custom_th" scope="col">Entidad Pública</th>
+                                <th class="custom_th" scope="col">Número de Quejas</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% stats.forEach((stat, index) => { %>
+                            <tr>
+                                <td scope="row"><%= stat.public_entity || 'Entidad no especificada' %></td>
+                                <td><%= parseInt(stat.total_complaints, 10) || 0 %></td>
+                            </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </section>
             <% } else { %>
-                <div class="alert alert-info mt-4">No hay quejas registradas para mostrar estadísticas.</div>
+                <div class="alert alert-info mt-4" role="alert" aria-live="polite">
+                    No hay quejas registradas para mostrar estadísticas.
+                </div>
             <% } %>
 
-            <div class="d-flex justify-content-center mt-4 mb-4">
-                <a href="/complaints/list" class="btn custom_button d-flex align-items-center me-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 0 24 24" width="20" fill="#fff" class="me-2">
-                        <path d="M0 0h24v24H0z" fill="none"/>
-                        <path d="M19 5v14H5V5h14m1.1-2H3.9c-.5 0-.9.4-.9.9v16.2c0 .4.4.9.9.9h16.2c.4 0 .9-.5.9-.9V3.9c0-.5-.5-.9-.9-.9zM11 7h6v2h-6V7zm0 4h6v2h-6v-2zm0 4h6v2h-6zM7 7h2v2H7zm0 4h2v2H7zm0 4h2v2H7z"/>
-                    </svg>
-                    Ver Lista de Quejas
-                </a>
-            </div>
-        </div>
+            <nav class="action-buttons" aria-label="Acciones principales">
+                <div class="d-flex justify-content-center mt-4 mb-4">
+                    <a href="/complaints/list" class="btn custom_button d-flex align-items-center me-3" 
+                       role="button" aria-label="Ver lista completa de quejas">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 0 24 24" width="20" fill="#fff" 
+                             class="me-2" aria-hidden="true">
+                            <path d="M0 0h24v24H0z" fill="none"/>
+                            <path d="M19 5v14H5V5h14m1.1-2H3.9c-.5 0-.9.4-.9.9v16.2c0 .4.4.9.9.9h16.2c.4 0 .9-.5.9-.9V3.9c0-.5-.5-.9-.9-.9zM11 7h6v2h-6V7zm0 4h6v2h-6v-2zm0 4h6v2h-6zM7 7h2v2H7zm0 4h2v2H7zm0 4h2v2H7z"/>
+                        </svg>
+                        Ver Lista de Quejas
+                    </a>
+                </div>
+            </nav>
+        </main>
+    </div>
 
+    <!-- Scripts al final del documento para mejor rendimiento -->
     <script>
-        $(document).ready(function() {
-            $('#statsTable').DataTable({
-                paging: true,
-                pageLength: 10,
-                lengthChange: false,
-                searching: true,
-                info: false,
-                ordering: true,
-                order: [[1, 'desc']],
-                autoWidth: false, // Desactivar autoWidth
-                responsive: true, // Activar responsive
-                language: {
-                    search: "Buscar:",
-                    paginate: {
-                        previous: "Anterior",
-                        next: "Siguiente"
+        // Configuración de constantes para DataTable
+        const DATA_TABLE_CONFIG = {
+            DEFAULT_PAGE_LENGTH: 10,
+            SEARCH_DELAY: 300,
+            RESIZE_DEBOUNCE: 150
+        };
+
+        // Configuración de idioma para DataTable
+        const DATATABLE_LANGUAGE = {
+            search: "Buscar:",
+            paginate: {
+                previous: "Anterior",
+                next: "Siguiente"
+            },
+            emptyTable: "No hay datos disponibles en la tabla",
+            zeroRecords: "No se encontraron registros que coincidan con la búsqueda"
+        };
+
+        // Función para inicializar DataTable
+        function initializeDataTable() {
+            try {
+                const table = $('#statsTable').DataTable({
+                    paging: true,
+                    pageLength: DATA_TABLE_CONFIG.DEFAULT_PAGE_LENGTH,
+                    lengthChange: false,
+                    searching: true,
+                    info: false,
+                    ordering: true,
+                    order: [[1, 'desc']], // Ordenar por número de quejas descendente
+                    autoWidth: false,
+                    responsive: true,
+                    language: DATATABLE_LANGUAGE,
+                    initComplete: function() {
+                        // Ajustar columnas después de la inicialización
+                        this.api().columns.adjust().responsive.recalc();
                     }
-                },
-                initComplete: function() {
-                    // Forzar el redimensionamiento inicial
-                    this.api().columns.adjust().responsive.recalc();
-                }
+                });
+
+                return table;
+            } catch (error) {
+                console.error('Error al inicializar DataTable:', error);
+                return null;
+            }
+        }
+
+        // Función para manejar el redimensionamiento de ventana con debounce
+        function handleWindowResize(table) {
+            if (!table) return;
+
+            let resizeTimeout;
+            $(window).on('resize', function() {
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(function() {
+                    try {
+                        table.columns.adjust().responsive.recalc();
+                    } catch (error) {
+                        console.error('Error al redimensionar tabla:', error);
+                    }
+                }, DATA_TABLE_CONFIG.RESIZE_DEBOUNCE);
             });
+        }
+
+        // Inicialización principal
+        $(document).ready(function() {
+            // Verificar que existe la tabla antes de inicializar
+            if ($('#statsTable').length === 0) {
+                console.warn('Tabla de estadísticas no encontrada');
+                return;
+            }
+
+            // Inicializar DataTable
+            const table = initializeDataTable();
             
-            // Redimensionar al cambiar el tamaño de la ventana
-            $(window).resize(function() {
-                $('#statsTable').DataTable().columns.adjust().responsive.recalc();
-            });
+            // Configurar manejo de redimensionamiento si la tabla se inicializó correctamente
+            if (table) {
+                handleWindowResize(table);
+            }
         });
     </script>
 </body>
