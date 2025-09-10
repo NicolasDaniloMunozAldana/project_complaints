@@ -16,7 +16,7 @@ class IEmailService {
    * @param {Object} data - Datos para llenar la plantilla
    * @returns {string} HTML de la plantilla
    */
-  generateEmailTemplate(data) {
+  generateEmailTemplate(_data) {
     throw new Error('El método generateEmailTemplate debe ser implementado');
   }
 
@@ -26,7 +26,7 @@ class IEmailService {
    * @param {string} action - Acción realizada
    * @returns {Promise<void>}
    */
-  async sendNotificationEmail(req, action) {
+  async sendNotificationEmail(_req, _action) {
     throw new Error('El método sendNotificationEmail debe ser implementado');
   }
 
