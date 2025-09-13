@@ -1,3 +1,32 @@
+
+require('dotenv').config();
+// Contraseña para borrar quejas: usa DELETE_PASSWORD, si no existe usa ADMIN_PASSWORD, si no existe usa 'admin123'
+const DELETE_PASSWORD = process.env.DELETE_PASSWORD || process.env.ADMIN_PASSWORD || 'admin123';
+
+// Eliminar queja con validación de contraseña
+exports.deleteComplaint = (req, res) => {
+    const { id_complaint, password } = req.body;
+    if (!id_complaint || !password) {
+        return res.status(400).json({ success: false, message: 'Datos incompletos' });
+    }
+    if (password !== DELETE_PASSWORD) {
+        return res.status(401).json({ success: false, message: 'Contraseña incorrecta' });
+    }
+    knex('COMPLAINTS')
+        .where('id_complaint', id_complaint)
+        .del()
+        .then(count => {
+            if (count > 0) {
+                res.json({ success: true });
+            } else {
+                res.status(404).json({ success: false, message: 'Queja no encontrada' });
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            res.status(500).json({ success: false, message: 'Error al borrar la queja' });
+        });
+};
 const knex = require('../config/db');
 
 exports.listComplaints = (req, res) => {
