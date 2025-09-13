@@ -33,6 +33,7 @@ exports.listComplaints = (req, res) => {
     knex('COMPLAINTS as c')
         .join('PUBLIC_ENTITYS as p', 'c.id_public_entity', 'p.id_public_entity')
         .select('c.id_complaint', 'p.name as public_entity', 'c.description')
+        .where('c.status', 1)
         .then((results) => {
             res.render('complaints_list', { complaints: results });
         })
