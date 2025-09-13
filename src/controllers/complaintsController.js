@@ -14,7 +14,7 @@ exports.deleteComplaint = (req, res) => {
     }
     knex('COMPLAINTS')
         .where('id_complaint', id_complaint)
-        .del()
+        .update({ status: 0 })
         .then(count => {
             if (count > 0) {
                 res.json({ success: true });
