@@ -483,6 +483,14 @@
             .custom_table td:nth-of-type(2):before {
                 content: "Descripción";
             }
+
+            .custom_table td:nth-of-type(3):before {
+                content: "Estado";
+            }
+
+            .custom_table td:nth-of-type(4):before {
+                content: "Acciones";
+            }
         }
 
         .alert-info {
@@ -490,6 +498,37 @@
             text-align: center;
             margin: 20px auto;
             max-width: 500px;
+        }
+
+        /* Estilos para badges de estado */
+        .badge {
+            font-size: 0.9rem;
+            padding: 0.5rem 0.8rem;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        /* Mejorar el grupo de botones */
+        .btn-group .btn {
+            margin: 0 2px;
+        }
+
+        @media (max-width: 768px) {
+            .btn-group {
+                display: flex;
+                flex-direction: column;
+                gap: 5px;
+            }
+            
+            .btn-group .btn {
+                margin: 0;
+                font-size: 0.85rem;
+            }
+
+            .badge {
+                font-size: 0.8rem;
+                padding: 0.4rem 0.6rem;
+            }
         }
 
         table.dataTable {
@@ -561,6 +600,7 @@
                             <tr>
                                 <th class="custom_th">Entidad</th>
                                 <th class="custom_th">Descripción</th>
+                                <th class="custom_th">Estado de Queja</th>
                                 <th class="custom_th">Acciones</th>
                             </tr>
                         </thead>
@@ -573,10 +613,44 @@
                                     <td data-label="Descripción">
                                         <%= c.description %>
                                     </td>
+                                    <td data-label="Estado de Queja">
+                                        <% 
+                                        let statusClass = '';
+                                        let statusText = '';
+                                        switch(c.complaint_status) {
+                                            case 'abierta':
+                                                statusClass = 'badge bg-warning text-dark';
+                                                statusText = 'Abierta';
+                                                break;
+                                            case 'en_revision':
+                                                statusClass = 'badge bg-info text-white';
+                                                statusText = 'En Revisión';
+                                                break;
+                                            case 'cerrada':
+                                                statusClass = 'badge bg-success text-white';
+                                                statusText = 'Cerrada';
+                                                break;
+                                            default:
+                                                statusClass = 'badge bg-secondary';
+                                                statusText = 'Desconocido';
+                                        }
+                                        %>
+                                        <span class="<%= statusClass %>"><%= statusText %></span>
+                                    </td>
                                     <td data-label="Acciones">
-                                        <button class="btn btn-danger btn-sm delete-btn" data-id="<%= c.id_complaint %>" data-entity="<%= c.public_entity %>">
-                                            <i class="bi bi-trash"></i> Borrar
-                                        </button>
+                                        <div class="btn-group" role="group">
+                                            <button class="btn btn-primary btn-sm change-status-btn" 
+                                                    data-id="<%= c.id_complaint %>" 
+                                                    data-entity="<%= c.public_entity %>"
+                                                    data-current-status="<%= c.complaint_status %>">
+                                                <i class="bi bi-arrow-repeat"></i> Cambiar Estado
+                                            </button>
+                                            <button class="btn btn-danger btn-sm delete-btn" 
+                                                    data-id="<%= c.id_complaint %>" 
+                                                    data-entity="<%= c.public_entity %>">
+                                                <i class="bi bi-trash"></i> Borrar
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             <% }) %>
@@ -618,6 +692,38 @@
             </div>
         </div>
 
+        <!-- Modal para cambiar estado de queja -->
+        <div class="modal fade" id="statusModal" tabindex="-1" aria-labelledby="statusModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="statusModalLabel">Cambiar Estado de Queja</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="statusForm">
+                            <input type="hidden" id="status-complaint-id" name="id_complaint">
+                            <div class="mb-3">
+                                <label for="complaint-status" class="form-label">Nuevo Estado:</label>
+                                <select class="form-select" id="complaint-status" name="complaint_status" required>
+                                    <option value="">Selecciona un estado</option>
+                                    <option value="abierta">Abierta</option>
+                                    <option value="en_revision">En Revisión</option>
+                                    <option value="cerrada">Cerrada</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="status-password" class="form-label">Contraseña para cambiar estado:</label>
+                                <input type="password" class="form-control" id="status-password" name="password" required>
+                            </div>
+                            <div id="status-error" class="text-danger mb-2" style="display:none;"></div>
+                            <button type="submit" class="btn btn-primary">Cambiar Estado</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
@@ -627,13 +733,35 @@
         let deleteError = document.getElementById('delete-error');
         let deleteIdInput = document.getElementById('delete-complaint-id');
 
+        // Modal y lógica de cambio de estado
+        let statusModal = new bootstrap.Modal(document.getElementById('statusModal'));
+        let statusForm = document.getElementById('statusForm');
+        let statusError = document.getElementById('status-error');
+        let statusIdInput = document.getElementById('status-complaint-id');
+        let statusSelect = document.getElementById('complaint-status');
+
         document.addEventListener('click', function(e) {
+            // Manejar click en botón de borrar
             if (e.target.closest('.delete-btn')) {
                 const btn = e.target.closest('.delete-btn');
                 deleteIdInput.value = btn.getAttribute('data-id');
                 deleteError.style.display = 'none';
                 deleteForm.reset();
                 deleteModal.show();
+            }
+
+            // Manejar click en botón de cambiar estado
+            if (e.target.closest('.change-status-btn')) {
+                const btn = e.target.closest('.change-status-btn');
+                statusIdInput.value = btn.getAttribute('data-id');
+                const currentStatus = btn.getAttribute('data-current-status');
+                
+                // Limpiar selección anterior
+                statusSelect.value = '';
+                statusError.style.display = 'none';
+                document.getElementById('status-password').value = '';
+                
+                statusModal.show();
             }
         });
 
@@ -666,6 +794,50 @@
             .catch(() => {
                 deleteError.textContent = 'Error al borrar la queja';
                 deleteError.style.display = 'block';
+            });
+        });
+
+        statusForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const id = statusIdInput.value;
+            const newStatus = statusSelect.value;
+            const password = document.getElementById('status-password').value;
+            
+            fetch('/complaints/update-status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    id_complaint: id, 
+                    complaint_status: newStatus, 
+                    password 
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    statusModal.hide();
+                    let statusText = '';
+                    switch(newStatus) {
+                        case 'abierta': statusText = 'Abierta'; break;
+                        case 'en_revision': statusText = 'En Revisión'; break;
+                        case 'cerrada': statusText = 'Cerrada'; break;
+                    }
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Estado actualizado',
+                        text: `El estado de la queja se cambió a: ${statusText}`,
+                        confirmButtonColor: '#2296c7'
+                    }).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    statusError.textContent = data.message || 'Error al cambiar el estado';
+                    statusError.style.display = 'block';
+                }
+            })
+            .catch(() => {
+                statusError.textContent = 'Error al cambiar el estado de la queja';
+                statusError.style.display = 'block';
             });
         });
         function onCaptchaSuccess(token) {

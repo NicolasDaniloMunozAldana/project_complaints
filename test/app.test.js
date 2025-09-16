@@ -12,13 +12,15 @@ jest.mock("knex", () => {
       id_complaint: 1,
       public_entity: "Alcaldía Municipal",
       description: "Problema con alumbrado público",
-      status: 1
+      status: 1,
+      complaint_status: "abierta"
     },
     {
       id_complaint: 2,
       public_entity: "Hospital Regional",
       description: "Demora en atención médica",
-      status: 1
+      status: 1,
+      complaint_status: "en_revision"
     }
   ];
 
@@ -28,6 +30,7 @@ jest.mock("knex", () => {
     select: jest.fn(() => mockClient),
     from: jest.fn().mockResolvedValue([{ id: 1, name: "Entity 1" }]),
     insert: jest.fn().mockResolvedValue([1]),
+    update: jest.fn().mockResolvedValue(1),
     join: jest.fn(() => mockClient),
     where: jest.fn((field, value) => {
       if (field === 'c.status') {
@@ -73,13 +76,15 @@ describe("App Endpoints", () => {
         id_complaint: 1,
         public_entity: "Alcaldía Municipal",
         description: "Problema con alumbrado público",
-        status: 1
+        status: 1,
+        complaint_status: "abierta"
       },
       {
         id_complaint: 2,
         public_entity: "Hospital Regional",
         description: "Demora en atención médica",
-        status: 1
+        status: 1,
+        complaint_status: "en_revision"
       }
     ]);
   });
@@ -205,7 +210,8 @@ describe("App Endpoints", () => {
       id_complaint: 1,
       public_entity: "Test Entity",
       description: longDescription,
-      status:1
+      status: 1,
+      complaint_status: "abierta"
     }]);
     
     const res = await request(app).get("/complaints/list");
@@ -229,5 +235,76 @@ describe("App Endpoints", () => {
     expect(res.statusCode).toBe(200);
     
     knex.then = originalThen;
+  });
+
+  test("POST /complaints/update-status without data should return error", async () => {
+    const res = await request(app)
+      .post("/complaints/update-status")
+      .send({});
+    
+    expect(res.statusCode).toBe(400);
+    expect(res.body).toEqual({
+      success: false,
+      message: 'Datos incompletos: se requiere ID de queja, nuevo estado y contraseña'
+    });
+  });
+
+  test("POST /complaints/update-status with invalid status should return error", async () => {
+    const res = await request(app)
+      .post("/complaints/update-status")
+      .send({
+        id_complaint: 1,
+        complaint_status: "invalid_status",
+        password: "admin123"
+      });
+    
+    expect(res.statusCode).toBe(400);
+    expect(res.body).toEqual({
+      success: false,
+      message: 'Estado no válido. Los estados permitidos son: abierta, en_revision, cerrada'
+    });
+  });
+
+  test("POST /complaints/update-status with wrong password should return error", async () => {
+    const res = await request(app)
+      .post("/complaints/update-status")
+      .send({
+        id_complaint: 1,
+        complaint_status: "cerrada",
+        password: "wrong_password"
+      });
+    
+    expect(res.statusCode).toBe(401);
+    expect(res.body).toEqual({
+      success: false,
+      message: 'Contraseña incorrecta'
+    });
+  });
+
+  test("should display complaint status badges correctly", async () => {
+    knex.__setMockData([
+      {
+        id_complaint: 1,
+        public_entity: "Alcaldía Municipal",
+        description: "Problema con alumbrado público",
+        status: 1,
+        complaint_status: "abierta"
+      },
+      {
+        id_complaint: 2,
+        public_entity: "Hospital Regional",
+        description: "Demora en atención médica",
+        status: 1,
+        complaint_status: "cerrada"
+      }
+    ]);
+
+    const res = await request(app).get("/complaints/list");
+    
+    expect(res.statusCode).toBe(200);
+    expect(res.text).toContain("Abierta");
+    expect(res.text).toContain("Cerrada");
+    expect(res.text).toContain("badge bg-warning");
+    expect(res.text).toContain("badge bg-success");
   });
 });
