@@ -1,3 +1,6 @@
+jest.mock("../src/services/GmailEmailService", () => ({
+  sendNotificationEmail: jest.fn().mockResolvedValue(undefined)
+}));
 // tests/app.test.js
 const request = require("supertest");
 const app = require("../src/index");
@@ -8,39 +11,52 @@ jest.mock("knex", () => {
     {
       id_complaint: 1,
       public_entity: "Alcaldía Municipal",
-      description: "Problema con alumbrado público"
+      description: "Problema con alumbrado público",
+      status: 1
     },
     {
       id_complaint: 2,
       public_entity: "Hospital Regional",
-      description: "Demora en atención médica"
+      description: "Demora en atención médica",
+      status: 1
     }
   ];
+
+  let whereFilter = null;
 
   const mockClient = {
     select: jest.fn(() => mockClient),
     from: jest.fn().mockResolvedValue([{ id: 1, name: "Entity 1" }]),
     insert: jest.fn().mockResolvedValue([1]),
-    
     join: jest.fn(() => mockClient),
+    where: jest.fn((field, value) => {
+      if (field === 'c.status') {
+        whereFilter = (item) => item.status === value;
+      }
+      return mockClient;
+    }),
     then: jest.fn((callback) => {
-      callback(mockData);
+      let data = mockData;
+      if (whereFilter) {
+        data = data.filter(whereFilter);
+      }
+      callback(data);
+      whereFilter = null;
       return mockClient;
     }),
     catch: jest.fn(() => mockClient),
-    
     __setMockData: (data) => {
       mockData = data;
     }
   };
-  
+
   const knexFn = jest.fn(() => mockClient);
   Object.assign(knexFn, mockClient);
-  
+
   knexFn.__setMockData = (data) => {
     mockData = data;
   };
-  
+
   return () => knexFn;
 });
 
@@ -56,12 +72,14 @@ describe("App Endpoints", () => {
       {
         id_complaint: 1,
         public_entity: "Alcaldía Municipal",
-        description: "Problema con alumbrado público"
+        description: "Problema con alumbrado público",
+        status: 1
       },
       {
         id_complaint: 2,
         public_entity: "Hospital Regional",
-        description: "Demora en atención médica"
+        description: "Demora en atención médica",
+        status: 1
       }
     ]);
   });
@@ -186,7 +204,8 @@ describe("App Endpoints", () => {
     knex.__setMockData([{
       id_complaint: 1,
       public_entity: "Test Entity",
-      description: longDescription
+      description: longDescription,
+      status:1
     }]);
     
     const res = await request(app).get("/complaints/list");
