@@ -1,129 +1,130 @@
 # Project Complaints
 
-Este proyecto es una aplicación web para la gestión y visualización de quejas, desarrollada como parte de un curso de Ingeniería de Software. El proyecto implementa una arquitectura limpia y desacoplada con principios SOLID.
+This project is a web application for complaint management and visualization, developed as part of a Software Engineering course. The project implements a clean, decoupled architecture following SOLID principles.
 
-## Características principales
-- **Gestión de Quejas**: Listado completo y visualización de quejas
-- **Estadísticas**: Dashboard con métricas y análisis de quejas
-- **Página de inicio**: Interfaz principal del sistema
-- **Backend robusto**: Express.js con arquitectura en capas
-- **Base de datos**: MySQL con Knex.js como query builder
-- **Vistas dinámicas**: Plantillas EJS para el frontend
-- **Notificaciones Email**: Sistema de email desacoplado con soporte Gmail
-- **Testing**: Suite completa de pruebas con Jest y Supertest
-- **Linting**: Configuración ESLint para calidad de código
-- **CI/CD**: Workflow de GitHub Actions para integración continua
+## Main Features
+- **Complaint Management**: Full listing and visualization of complaints.
+- **Statistics**: Dashboard with complaint metrics and analytics.
+- **Homepage**: Main interface of the system.
+- **Robust Backend**: Express.js with layered architecture.
+- **Database**: MySQL with Knex.js as the query builder.
+- **Dynamic Views**: EJS templates for the frontend.
+- **Email Notifications**: Decoupled email system with Gmail support.
+- **Testing**: Complete test suite using Jest and Supertest.
+- **Linting**: ESLint configuration for code quality.
+- **CI/CD**: GitHub Actions workflow for continuous integration.
 
-## Arquitectura de Email Desacoplada
+## Decoupled Email Architecture
 
-El proyecto incluye una **arquitectura de email completamente refactorizada** que implementa:
+The project includes a **fully refactored email architecture** implementing:
 
-- **Clean Architecture** y principios **SOLID**
+- **Clean Architecture** and **SOLID principles**
 - **Factory Pattern** + **Singleton Pattern**
-- **Interface-based design** para extensibilidad
-- **Soporte Gmail** con validación de credenciales
-- **Compatibilidad backward** con implementación anterior
-- **Plantillas HTML responsivas**
-- **Manejo robusto de errores**
+- **Interface-based design** for extensibility
+- **Gmail support** with credential validation
+- **Backward compatibility** with previous implementation
+- **Responsive HTML templates**
+- **Robust error handling**
 
-Para más detalles, consulta [`EMAIL_ARCHITECTURE.md`](./EMAIL_ARCHITECTURE.md) y [`RESUMEN_IMPLEMENTACION.md`](./RESUMEN_IMPLEMENTACION.md).
+For more details, see [`EMAIL_ARCHITECTURE.md`](./EMAIL_ARCHITECTURE.md) and [`RESUMEN_IMPLEMENTACION.md`](./RESUMEN_IMPLEMENTACION.md).
 
-## 📁 Estructura del proyecto
+## 📁 Project Structure
 ```
 project_complaints/
 ├── 📄 package.json
 ├── 🔐 .env
 ├── 📝 .gitignore
 ├── 📋 README.md
-├── 📚 EMAIL_ARCHITECTURE.md       # Documentación arquitectura email
-├── 📊 RESUMEN_IMPLEMENTACION.md   # Resumen de implementaciones
-├── 🧪 demo-email-service.js       # Script demostración email
-├── 🔧 test-email-integration.js   # Pruebas integración email
-├── ⚙️ eslint.config.mjs           # Configuración ESLint
+├── 📚 EMAIL_ARCHITECTURE.md       # Email architecture documentation
+├── 📊 RESUMEN_IMPLEMENTACION.md   # Implementation summary
+├── 🧪 demo-email-service.js       # Email demo script
+├── 🔧 test-email-integration.js   # Email integration tests
+├── ⚙️ eslint.config.mjs           # ESLint configuration
 ├── 📂 sources/
-│   ├── 🗄️ dbcomplaints.sql       # Script base de datos
-│   └── 🖼️ images/                 # Iconos SVG
+│   ├── 🗄️ dbcomplaints.sql       # Database script
+│   └── 🖼️ images/                 # SVG icons
 ├── 📂 src/
-│   ├── 🚀 index.js                # Punto de entrada
-│   ├── 📂 config/                 # Configuraciones
+│   ├── 🚀 index.js                # Entry point
+│   ├── 📂 config/                 # Configuration files
 │   │   ├── constants.js
 │   │   └── db.js
-│   ├── 📂 controllers/            # Controladores MVC
+│   ├── 📂 controllers/            # MVC controllers
 │   │   ├── complaintsController.js
 │   │   └── homeController.js
-│   ├── 📂 interfaces/             # Contratos/Interfaces
+│   ├── 📂 interfaces/             # Contracts/Interfaces
 │   │   └── IEmailService.js
-│   ├── 📂 middlewares/            # Middlewares Express
+│   ├── 📂 middlewares/            # Express middlewares
 │   │   └── emailNotifications.js
-│   ├── 📂 routes/                 # Definición de rutas
+│   ├── 📂 routes/                 # Route definitions
 │   │   ├── complaintsRoutes.js
 │   │   └── homeRoutes.js
-│   ├── 📂 services/               # Servicios de negocio
+│   ├── 📂 services/               # Business services
 │   │   ├── EmailServiceFactory.js
 │   │   └── GmailEmailService.js
-│   ├── 📂 utils/                  # Utilidades
+│   ├── 📂 utils/                  # Utilities
 │   │   ├── emailService.js
 │   │   └── emailService.js.backup
-│   └── 📂 views/                  # Plantillas EJS
+│   └── 📂 views/                  # EJS templates
 │       ├── complaints_list.ejs
 │       ├── complaints_stats.ejs
 │       └── home.ejs
 ├── 📂 test/
-│   └── 🧪 app.test.js             # Suite de pruebas
+│   └── 🧪 app.test.js             # Test suite
 └── 📂 .github/
     └── 📂 workflows/
         └── ⚙️ test.yml            # GitHub Actions CI/CD
 ```
 
-## Instalación
+## Installation
 
-1. **Clona el repositorio:**
+1. **Clone the repository:**
    ```powershell
-   git clone <repository-url>
+   git clone https://github.com/NicolasDaniloMunozAldana/project_complaints.git
    cd project_complaints
    ```
 
-2. **Instala las dependencias:**
+2. **Install dependencies:**
    ```powershell
    npm install
    ```
 
-3. **Configura el archivo `.env`:**
+3. **Configure the `.env` file:**
    ```powershell
    cp example.env .env
    ```
-   Edita el archivo `.env` con tus credenciales de base de datos MySQL y configuración de Gmail.
+   Edit the `.env` file with your MySQL database credentials and Gmail configuration.
 
-4. **Configura la base de datos:**
-   - Importa el archivo `sources/dbcomplaints.sql` en tu base de datos MySQL
-   - Asegúrate de que las credenciales en `.env` sean correctas
+4. **Set up the database:**
+   - Import the `sources/dbcomplaints.sql` file into your MySQL database.
+   - Make sure the credentials in `.env` are correct.
 
-5. **Configura Gmail (opcional para notificaciones):**
-   - Habilita la verificación en 2 pasos en tu cuenta Gmail
-   - Genera una contraseña de aplicación
-   - Configura las variables `GMAIL_USER` y `GMAIL_PASS` en `.env`
+5. **Configure Gmail (optional for notifications):**
+   - Enable 2-step verification on your Gmail account.
+   - Generate an app password.
+   - Set the `GMAIL_USER` and `GMAIL_PASS` variables in `.env`.
 
-## Estructura para descripción de Pull Requests
-La estructura sugerida para la descripción de los pull requests y el contenido que se sugiere incluir es el siguiente:
+## Pull Request Description Structure
 
-### Descripción
-- Proporciona una explicación clara de los cambios realizados en este pull request.
-- Qué se modificó, añadió o eliminó.
-- Dónde se aplicó el cambio (p. ej., página principal, página de lista, servicio backend, etc.).
-- Manténlo factual y específico (sin justificaciones aquí, solo lo que se cambió).
+The suggested structure for pull request descriptions and the content to include is as follows:
 
-### Objetivo
-- Explica el propósito del cambio.
-- ¿Por qué fue necesaria esta modificación?
-- ¿Qué problema resuelve o qué mejora aporta?
-- Céntrate en la intención (p. ej., mejorar la usabilidad, corregir un error, optimizar el rendimiento).
+### Description
+- Provide a clear explanation of the changes made in this pull request.
+- Specify what was modified, added, or removed.
+- Indicate where the change was applied (e.g., main page, list page, backend service, etc.).
+- Keep it factual and specific (no justifications here, just what was changed).
 
-### Impacto
-- Describe las consecuencias del cambio.
-- ¿Cómo afecta al sistema, a los usuarios o a otros módulos?
-- Menciona cualquier mejora, limitación o riesgo potencial.
+### Goal
+- Explain the purpose of the change.
+- Why was this modification necessary?
+- What problem does it solve or what improvement does it bring?
+- Focus on the intent (e.g., improve usability, fix a bug, optimize performance).
 
-### Ejemplo: 
+### Impact
+- Describe the consequences of the change.
+- How does it affect the system, users, or other modules?
+- Mention any improvements, limitations, or potential risks.
+
+### Example:
 
 **Title**
   
@@ -151,64 +152,62 @@ Users: No immediate visible changes, since the compatibility layer preserves cur
 System: Now supports extensibility to other email providers without requiring changes to the existing code.
 Risks: Credential validation in GmailEmailService may require adjustments in environments using Gmail-specific configurations (OAuth, app passwords).
 
-## 🚀 Uso
+## 🚀 Usage
 
-### Servidor de desarrollo
-Para iniciar el servidor:
+### Development Server
+To start the server:
 ```powershell
 npm start
-# o directamente
+# or directly
 node src/index.js
 ```
 
-### Scripts disponibles
+### Available Scripts
 ```powershell
-# Ejecutar pruebas
+# Run tests
 npm test
 
-# Linting del código
+# Lint code
 npm run lint
 
-# Corregir automáticamente problemas de linting
+# Automatically fix linting issues
 npm run lint:fix
 ```
 
-### Demo del servicio de email
+### Email Service Demo
 ```powershell
-# Probar la nueva arquitectura de email
+# Test the new email architecture
 node demo-email-service.js
 
-# Pruebas de integración de email
+# Email integration tests
 node test-email-integration.js
 ```
 
-## 🧪 Pruebas
-Para ejecutar las pruebas:
+## 🧪 Testing
+To run the tests:
 ```powershell
 npm test
 ```
 
-## 📦 Dependencias principales
+## 📦 Main Dependencies
 
-### Producción
-- **express** - Framework web para Node.js
-- **knex** - Query builder SQL
-- **mysql2** - Driver MySQL para Node.js
-- **ejs** - Motor de plantillas
-- **axios** - Cliente HTTP
-- **dotenv** - Gestión de variables de entorno
-- **nodemailer** - Envío de emails
+### Production
+- **express** - Web framework for Node.js
+- **knex** - SQL query builder
+- **mysql2** - MySQL driver for Node.js
+- **ejs** - Template engine
+- **axios** - HTTP client
+- **dotenv** - Environment variable management
+- **nodemailer** - Email sending
 
-### Desarrollo y Testing
-- **jest** - Framework de testing
-- **supertest** - Testing de APIs HTTP
-- **eslint** - Linter para JavaScript
-- **@eslint/js** - Configuraciones ESLint
+### Development and Testing
+- **jest** - Testing framework
+- **supertest** - HTTP API testing
+- **eslint** - JavaScript linter
+- **@eslint/js** - ESLint configurations
 
-## 👥 Autores
+## 👥 Authors
 
 - **Luis Enrique Hernández Valbuena** - [@Luisen1](https://github.com/Luisen1)
 - **Kevin Johann Jimenez Poveda** - [@KevP2051](https://github.com/KevP2051)
 - **Nicolas Danilo Muñoz Aldana** - [@NicolasDaniloMunozAldana](https://github.com/NicolasDaniloMunozAldana)
-
-
