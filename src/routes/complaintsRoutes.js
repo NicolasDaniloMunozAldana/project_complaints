@@ -6,5 +6,6 @@ router.get('/list', complaintsController.listComplaints);
 router.post('/file', complaintsController.fileComplaint);
 router.get('/stats', complaintsController.complaintsStats);
 router.post('/delete', complaintsController.deleteComplaint);
+router.post('/update-status', complaintsController.updateComplaintStatus);
 
 module.exports = router;

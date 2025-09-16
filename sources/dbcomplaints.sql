@@ -7,7 +7,8 @@ CREATE TABLE COMPLAINTS (
     id_complaint INT NOT NULL,
     id_public_entity INT NOT NULL,
     description VARCHAR(500),
-    status TINYINT(1) DEFAULT 1 NOT NULL
+    status TINYINT(1) DEFAULT 1 NOT NULL,
+    complaint_status ENUM('abierta', 'en_revision', 'cerrada') DEFAULT 'abierta' NOT NULL
 );
 
 ALTER TABLE PUBLIC_ENTITYS 
@@ -23,6 +24,10 @@ FOREIGN KEY (id_public_entity) REFERENCES PUBLIC_ENTITYS(id_public_entity);
 -- Insert status column in case the table already exists
 ALTER TABLE COMPLAINTS
 ADD COLUMN status TINYINT(1) NOT NULL DEFAULT 1;
+
+-- Add complaint_status column for complaint states
+ALTER TABLE COMPLAINTS
+ADD COLUMN complaint_status ENUM('abierta', 'en_revision', 'cerrada') DEFAULT 'abierta' NOT NULL;
 
 ALTER TABLE COMPLAINTS
 MODIFY status TINYINT(1) NOT NULL DEFAULT 1

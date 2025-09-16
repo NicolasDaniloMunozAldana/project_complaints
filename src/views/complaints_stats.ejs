@@ -241,6 +241,54 @@
             white-space: nowrap !important;
             border: 0 !important;
         }
+
+        /* Estilos para las tarjetas de estado */
+        .status-stats-section {
+            margin-bottom: 2rem;
+        }
+        
+        .status-stats-section h3 {
+            color: #10B981;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .status-stats-section .card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            border-radius: 12px;
+            height: 100%;
+        }
+        
+        .status-stats-section .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+        }
+        
+        .status-stats-section .card-body {
+            padding: 1.5rem;
+        }
+        
+        .status-stats-section h4 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0.5rem 0;
+        }
+        
+        @media (max-width: 768px) {
+            .status-stats-section .card-body {
+                padding: 1rem;
+            }
+            
+            .status-stats-section h4 {
+                font-size: 2rem;
+            }
+            
+            .status-stats-section h3 {
+                font-size: 1.5rem;
+                margin-bottom: 1rem;
+            }
+        }
     </style>
 </head>
 
@@ -283,6 +331,54 @@
                     <h2><%= totalComplaints %></h2>
                     <p>Total de quejas registradas</p>
                 </div>
+
+                <!-- Estadísticas por estado de queja -->
+                <% if (statusStats && statusStats.length > 0) { %>
+                <section class="status-stats-section mb-4">
+                    <h3 class="mb-3">Distribución por Estado de Queja</h3>
+                    <div class="row justify-content-center">
+                        <% statusStats.forEach(statusStat => { %>
+                            <div class="col-md-4 col-sm-6 mb-3">
+                                <div class="card border-0 shadow-sm">
+                                    <div class="card-body text-center">
+                                        <% 
+                                        let statusClass = '';
+                                        let statusIcon = '';
+                                        let statusText = '';
+                                        switch(statusStat.complaint_status) {
+                                            case 'abierta':
+                                                statusClass = 'text-warning';
+                                                statusIcon = '⚠️';
+                                                statusText = 'Abiertas';
+                                                break;
+                                            case 'en_revision':
+                                                statusClass = 'text-info';
+                                                statusIcon = '🔍';
+                                                statusText = 'En Revisión';
+                                                break;
+                                            case 'cerrada':
+                                                statusClass = 'text-success';
+                                                statusIcon = '✅';
+                                                statusText = 'Cerradas';
+                                                break;
+                                            default:
+                                                statusClass = 'text-secondary';
+                                                statusIcon = '❓';
+                                                statusText = 'Desconocido';
+                                        }
+                                        %>
+                                        <div class="<%= statusClass %> mb-2" style="font-size: 2rem;">
+                                            <%= statusIcon %>
+                                        </div>
+                                        <h4 class="<%= statusClass %>"><%= statusStat.total %></h4>
+                                        <p class="card-text text-muted mb-0"><%= statusText %></p>
+                                    </div>
+                                </div>
+                            </div>
+                        <% }) %>
+                    </div>
+                </section>
+                <% } %>
 
                 <section class="stats-table-section" aria-labelledby="table-title">
                     <h2 id="table-title" class="sr-only">Tabla de estadísticas por entidad</h2>
