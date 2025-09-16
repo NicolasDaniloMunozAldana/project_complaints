@@ -561,6 +561,7 @@
                             <tr>
                                 <th class="custom_th">Entidad</th>
                                 <th class="custom_th">Descripción</th>
+                                <th class="custom_th">Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -572,8 +573,13 @@
                                     <td data-label="Descripción">
                                         <%= c.description %>
                                     </td>
+                                    <td data-label="Acciones">
+                                        <button class="btn btn-danger btn-sm delete-btn" data-id="<%= c.id_complaint %>" data-entity="<%= c.public_entity %>">
+                                            <i class="bi bi-trash"></i> Borrar
+                                        </button>
+                                    </td>
                                 </tr>
-                                <% }) %>
+                            <% }) %>
                         </tbody>
                     </table>
                 </div>
@@ -589,7 +595,79 @@
         </div>
     </div>
 
-    <script>
+        <!-- Modal para confirmación de borrado -->
+        <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="deleteModalLabel">Confirmar Borrado de Queja</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="deleteForm">
+                            <input type="hidden" id="delete-complaint-id" name="id_complaint">
+                            <div class="mb-3">
+                                <label for="delete-password" class="form-label">Contraseña para borrar:</label>
+                                <input type="password" class="form-control" id="delete-password" name="password" required>
+                            </div>
+                            <div id="delete-error" class="text-danger mb-2" style="display:none;"></div>
+                            <button type="submit" class="btn btn-danger">Borrar</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script>
+        // Modal y lógica de borrado
+        let deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        let deleteForm = document.getElementById('deleteForm');
+        let deleteError = document.getElementById('delete-error');
+        let deleteIdInput = document.getElementById('delete-complaint-id');
+
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.delete-btn')) {
+                const btn = e.target.closest('.delete-btn');
+                deleteIdInput.value = btn.getAttribute('data-id');
+                deleteError.style.display = 'none';
+                deleteForm.reset();
+                deleteModal.show();
+            }
+        });
+
+        deleteForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const id = deleteIdInput.value;
+            const password = document.getElementById('delete-password').value;
+            fetch('/complaints/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id_complaint: id, password })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    deleteModal.hide();
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Queja borrada',
+                        text: 'La queja fue eliminada correctamente',
+                        confirmButtonColor: '#2296c7'
+                    }).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    deleteError.textContent = data.message || 'Contraseña incorrecta';
+                    deleteError.style.display = 'block';
+                }
+            })
+            .catch(() => {
+                deleteError.textContent = 'Error al borrar la queja';
+                deleteError.style.display = 'block';
+            });
+        });
         function onCaptchaSuccess(token) {
             fetch('/verify-captcha', {
                 method: 'POST',
