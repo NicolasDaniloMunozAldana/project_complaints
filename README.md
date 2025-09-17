@@ -75,6 +75,82 @@ project_complaints/
         └── ⚙️ test.yml            # GitHub Actions CI/CD
 ```
 
+## Naming Conventions
+
+To ensure consistency and traceability across the project, the following naming conventions **must** be used for issues, branches, and pull requests. This structure is based on [Gitflow](https://www.atlassian.com/git/tutorials/comparing-workflows/gitflow-workflow) and includes a unique project identifier (`KAN`) for improved tracking.
+
+### Issue Naming
+
+All issues must be named using the following format:
+
+```
+[KAN-XX] Issue Title
+```
+
+- `KAN` is the project identifier and **must** always be uppercase.
+- `XX` is the issue number.
+- The title should be concise and clearly describe the issue.
+- Example:  
+  ```
+  [KAN-47] Update readme to follow the new standard structure for naming branches, issues and pull requests
+  ```
+
+### Branch Naming
+
+Branches must follow the [Gitflow branching model](https://www.atlassian.com/git/tutorials/comparing-workflows/gitflow-workflow) with the addition of the project identifier and issue number.
+
+```
+<type>/(KAN-XX)-branch-name
+```
+
+- `<type>`: The Gitflow prefix (e.g., `feature`, `bugfix`, `hotfix`, `release`).
+- `(KAN-XX)`: The project identifier and issue number, in parentheses, immediately after the Gitflow prefix. `KAN` must be uppercase.
+- `branch-name`: A concise, kebab-case description of the branch purpose.
+- Example:  
+  ```
+  feature/(KAN-46)-add-status-to-complaints
+  bugfix/(KAN-51)-fix-email-validation
+  ```
+
+### Pull Request Naming
+
+Pull requests should use the same structure as branches, with the Gitflow type as a prefix. If the pull request is for documentation, add a `Docs/` prefix before the Gitflow type.
+
+```
+<Type>/(KAN-XX) Branch Title
+```
+or, for documentation:
+```
+Docs/<Type>/(KAN-XX) Branch Title
+```
+
+- `<Type>`: The Gitflow type, capitalized (e.g., `Feature`, `Bugfix`, `Hotfix`, `Release`).
+- `(KAN-XX)`: The project identifier and issue number, in parentheses, immediately after the type.
+- `Branch Title`: Short, descriptive, and in [title case](https://capitalizemytitle.com/) or plain English.
+- For documentation pull requests, start the title with `Docs/`.
+- Examples:  
+  ```
+  Feature/(KAN-46) Add status to complaints
+  Bugfix/(KAN-51) Fix email validation
+  Docs/Feature/(KAN-50) Update README with naming conventions
+  ```
+
+**Summary Table:**
+
+| Entity         | Format                                         | Example                                           |
+|----------------|------------------------------------------------|---------------------------------------------------|
+| Issue          | `[KAN-XX] Issue title`                         | `[KAN-47] Update readme to follow the new standard structure...` |
+| Branch         | `type/(KAN-XX)-branch-name`                    | `feature/(KAN-46)-add-status-to-complaints`       |
+| Pull Request   | `Type/(KAN-XX) Branch Title`                   | `Feature/(KAN-46) Add status to complaints`       |
+| PR (Docs)      | `Docs/Type/(KAN-XX) Branch Title`              | `Docs/Feature/(KAN-50) Update README with naming conventions` |
+
+**Guidelines:**
+- Always keep `KAN` in uppercase and the issue number zero-padded if needed.
+- The `(KAN-XX)` identifier is mandatory in branches and pull requests for tracking.
+- Use descriptive, concise titles for issues, branches, and pull requests.
+
+---
+
 ## Installation
 
 1. **Clone the repository:**
