@@ -32,8 +32,9 @@ const knex = require('../config/db');
 exports.listComplaints = (req, res) => {
     knex('COMPLAINTS as c')
         .join('PUBLIC_ENTITYS as p', 'c.id_public_entity', 'p.id_public_entity')
-        .select('c.id_complaint', 'p.name as public_entity', 'c.description', 'c.complaint_status')
+        .select('c.id_complaint', 'p.name as public_entity', 'c.description', 'c.complaint_status', 'c.created_at')
         .where('c.status', 1)
+        .orderBy('c.created_at', 'desc')
         .then((results) => {
             res.render('complaints_list', { complaints: results });
         })
@@ -173,4 +174,142 @@ exports.updateComplaintStatus = (req, res) => {
                 message: 'Error al actualizar el estado de la queja' 
             });
         });
+};
+
+// Obtener comentarios anónimos de una queja específica
+exports.getComments = (req, res) => {
+    const { id_complaint } = req.params;
+    
+    if (!id_complaint || isNaN(Number(id_complaint))) {
+        return res.status(400).json({ 
+            success: false, 
+            message: 'ID de queja inválido' 
+        });
+    }
+
+    knex('ANONYMOUS_COMMENTS')
+        .select('id_comment', 'comment_text', 'created_at')
+        .where('id_complaint', id_complaint)
+        .where('status', 1)
+        .orderBy('created_at', 'desc')
+        .then((comments) => {
+            res.json({ 
+                success: true, 
+                comments: comments 
+            });
+        })
+        .catch(err => {
+            console.error('Error al obtener comentarios:', err);
+            res.status(500).json({ 
+                success: false, 
+                message: 'Error al obtener los comentarios' 
+            });
+        });
+};
+
+// Agregar comentario anónimo a una queja
+exports.addComment = (req, res) => {
+    const { id_complaint, comment_text } = req.body;
+    
+    // Validar datos requeridos
+    if (!id_complaint || !comment_text) {
+        return res.status(400).json({ 
+            success: false, 
+            message: 'ID de queja y texto del comentario son requeridos' 
+        });
+    }
+
+    // Validar longitud mínima del comentario
+    if (comment_text.trim().length < 10) {
+        return res.status(400).json({ 
+            success: false, 
+            message: 'El comentario debe tener al menos 10 caracteres' 
+        });
+    }
+
+    // Verificar que la queja existe y está activa
+    knex('COMPLAINTS')
+        .select('id_complaint')
+        .where('id_complaint', id_complaint)
+        .where('status', 1)
+        .first()
+        .then((complaint) => {
+            if (!complaint) {
+                return res.status(404).json({ 
+                    success: false, 
+                    message: 'Queja no encontrada o inactiva' 
+                });
+            }
+
+            // Insertar el comentario
+            return knex('ANONYMOUS_COMMENTS')
+                .insert({
+                    id_complaint: id_complaint,
+                    comment_text: comment_text.trim()
+                });
+        })
+        .then(() => {
+            res.json({ 
+                success: true, 
+                message: 'Comentario agregado exitosamente' 
+            });
+        })
+        .catch(err => {
+            console.error('Error al agregar comentario:', err);
+            res.status(500).json({ 
+                success: false, 
+                message: 'Error al agregar el comentario' 
+            });
+        });
+};
+
+// Obtener detalles completos de una queja con sus comentarios
+exports.getComplaintDetails = (req, res) => {
+    const { id_complaint } = req.params;
+    
+    if (!id_complaint || isNaN(Number(id_complaint))) {
+        return res.status(400).json({ 
+            success: false, 
+            message: 'ID de queja inválido' 
+        });
+    }
+
+    Promise.all([
+        // Obtener datos de la queja
+        knex('COMPLAINTS as c')
+            .join('PUBLIC_ENTITYS as p', 'c.id_public_entity', 'p.id_public_entity')
+            .select('c.id_complaint', 'p.name as public_entity', 'c.description', 
+                   'c.complaint_status', 'c.created_at', 'c.updated_at')
+            .where('c.id_complaint', id_complaint)
+            .where('c.status', 1)
+            .first(),
+        
+        // Obtener comentarios de la queja
+        knex('ANONYMOUS_COMMENTS')
+            .select('id_comment', 'comment_text', 'created_at')
+            .where('id_complaint', id_complaint)
+            .where('status', 1)
+            .orderBy('created_at', 'desc')
+    ])
+    .then(([complaint, comments]) => {
+        if (!complaint) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Queja no encontrada' 
+            });
+        }
+
+        res.json({ 
+            success: true, 
+            complaint: complaint,
+            comments: comments 
+        });
+    })
+    .catch(err => {
+        console.error('Error al obtener detalles de la queja:', err);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error al obtener los detalles de la queja' 
+        });
+    });
 };

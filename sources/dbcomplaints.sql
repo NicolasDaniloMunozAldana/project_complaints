@@ -8,7 +8,9 @@ CREATE TABLE COMPLAINTS (
     id_public_entity INT NOT NULL,
     description VARCHAR(500),
     status TINYINT(1) DEFAULT 1 NOT NULL,
-    complaint_status ENUM('abierta', 'en_revision', 'cerrada') DEFAULT 'abierta' NOT NULL
+    complaint_status ENUM('abierta', 'en_revision', 'cerrada') DEFAULT 'abierta' NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 ALTER TABLE PUBLIC_ENTITYS 
@@ -39,3 +41,24 @@ INSERT INTO PUBLIC_ENTITYS (id_public_entity, name) VALUES
 (3, 'INDEPORTES Boyacá'),
 (4, 'Instituto de Tránsito de Boyacá (ITBOY)'),
 (5, 'Alcaldia Mayor de Tunja');
+
+-- Crear tabla para comentarios anónimos
+CREATE TABLE ANONYMOUS_COMMENTS (
+    id_comment INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    id_complaint INT NOT NULL,
+    comment_text TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    status TINYINT(1) DEFAULT 1 NOT NULL,
+    CONSTRAINT FK_COMMENT_COMPLAINT 
+        FOREIGN KEY (id_complaint) REFERENCES COMPLAINTS(id_complaint) 
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT chk_comment_length 
+        CHECK (CHAR_LENGTH(TRIM(comment_text)) >= 10),
+    CONSTRAINT chk_comment_status 
+        CHECK (status IN (0,1))
+);
+
+-- Crear índices para mejorar el rendimiento
+CREATE INDEX idx_comments_complaint ON ANONYMOUS_COMMENTS(id_complaint);
+CREATE INDEX idx_comments_created_at ON ANONYMOUS_COMMENTS(created_at);
+CREATE INDEX idx_complaints_created_at ON COMPLAINTS(created_at);
