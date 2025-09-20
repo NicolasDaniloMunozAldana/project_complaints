@@ -840,6 +840,37 @@
                 statusError.style.display = 'block';
             });
         });
+
+        // --- CAPTCHA LOCALSTORAGE ---
+        const CAPTCHA_KEY = 'captcha_token';
+        const CAPTCHA_TIME_KEY = 'captcha_token_time';
+        const CAPTCHA_EXPIRATION_MINUTES = 30;
+
+        function isCaptchaValid() {
+            const token = localStorage.getItem(CAPTCHA_KEY);
+            const time = localStorage.getItem(CAPTCHA_TIME_KEY);
+            if (!token || !time) return false;
+            const now = Date.now();
+            const diff = (now - parseInt(time, 10)) / 1000 / 60;
+            return diff < CAPTCHA_EXPIRATION_MINUTES;
+        }
+
+        function showComplaintsList() {
+            document.querySelector('.captcha-container').style.display = 'none';
+            document.getElementById('complaints-container').style.display = 'block';
+            if ($('.custom_table').length && !$.fn.DataTable.isDataTable('.custom_table')) {
+                $('.custom_table').DataTable({
+                    paging: true,
+                    pageLength: 5,
+                    lengthChange: false,
+                    searching: false,
+                    info: false,
+                    ordering: false,
+                    responsive: true
+                });
+            }
+        }
+
         function onCaptchaSuccess(token) {
             fetch('/verify-captcha', {
                 method: 'POST',
@@ -849,18 +880,9 @@
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
-                        document.querySelector('.captcha-container').style.display = 'none';
-                        document.getElementById('complaints-container').style.display = 'block';
-
-                        $('.custom_table').DataTable({
-                            paging: true,
-                            pageLength: 5,  // Menos registros por página en móviles
-                            lengthChange: false,
-                            searching: false,
-                            info: false,
-                            ordering: false,
-                            responsive: true
-                        });
+                        localStorage.setItem(CAPTCHA_KEY, token);
+                        localStorage.setItem(CAPTCHA_TIME_KEY, Date.now().toString());
+                        showComplaintsList();
                     } else {
                         alert('Verificación fallida. Por favor, intenta de nuevo.');
                         grecaptcha.reset();
@@ -872,6 +894,12 @@
                     grecaptcha.reset();
                 });
         }
+
+        window.addEventListener('DOMContentLoaded', function() {
+            if (isCaptchaValid()) {
+                showComplaintsList();
+            }
+        });
 
         // Ajustar el reCAPTCHA al tamaño de pantalla
         function adjustRecaptcha() {
