@@ -45,7 +45,6 @@ jest.mock("knex", () => {
     }
   ];
 
-  let whereFilter = null;
   let currentTable = 'COMPLAINTS';
   let chainedFilters = [];
 
