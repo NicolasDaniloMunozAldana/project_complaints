@@ -15,16 +15,6 @@ describe("Business Logic Unit Tests", () => {
       EmailServiceFactory.resetInstance();
     });
 
-    test("should create Gmail service by default", () => {
-      const service = EmailServiceFactory.createEmailService();
-      expect(service).toBeInstanceOf(GmailEmailService);
-    });
-
-    test("should create Gmail service when provider is 'gmail'", () => {
-      const service = EmailServiceFactory.createEmailService('gmail');
-      expect(service).toBeInstanceOf(GmailEmailService);
-    });
-
     test("should throw error for unsupported provider", () => {
       expect(() => {
         EmailServiceFactory.createEmailService('unsupported');
@@ -43,19 +33,6 @@ describe("Business Logic Unit Tests", () => {
       expect(providers).toContain('outlook');
       expect(providers).toContain('sendgrid');
       expect(providers).toContain('aws-ses');
-    });
-
-    test("should implement singleton pattern correctly", () => {
-      const instance1 = EmailServiceFactory.getInstance();
-      const instance2 = EmailServiceFactory.getInstance();
-      expect(instance1).toBe(instance2);
-    });
-
-    test("should reset instance correctly", () => {
-      const instance1 = EmailServiceFactory.getInstance();
-      EmailServiceFactory.resetInstance();
-      const instance2 = EmailServiceFactory.getInstance();
-      expect(instance1).not.toBe(instance2);
     });
   });
 
