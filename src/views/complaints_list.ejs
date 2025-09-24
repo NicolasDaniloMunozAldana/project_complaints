@@ -7,6 +7,7 @@
     <title>Lista de Quejas</title>
     <link rel="stylesheet" href="/complaint_list_style.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
@@ -601,6 +602,7 @@
                                 <th class="custom_th">Entidad</th>
                                 <th class="custom_th">Descripción</th>
                                 <th class="custom_th">Estado de Queja</th>
+                                <th class="custom_th">Fecha de Creación</th>
                                 <th class="custom_th">Acciones</th>
                             </tr>
                         </thead>
@@ -637,8 +639,28 @@
                                         %>
                                         <span class="<%= statusClass %>"><%= statusText %></span>
                                     </td>
+                                    <td data-label="Fecha de Creación">
+                                        <% 
+                                        const createdDate = new Date(c.created_at);
+                                        const formattedDate = createdDate.toLocaleDateString('es-ES', {
+                                            year: 'numeric',
+                                            month: 'short',
+                                            day: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit'
+                                        });
+                                        %>
+                                        <span class="text-muted">
+                                            <%= formattedDate %>
+                                        </span>
+                                    </td>
                                     <td data-label="Acciones">
                                         <div class="btn-group" role="group">
+                                            <button class="btn btn-info btn-sm view-comments-btn" 
+                                                    data-id="<%= c.id_complaint %>" 
+                                                    data-entity="<%= c.public_entity %>">
+                                                <i class="bi bi-chat-dots"></i> Comentarios
+                                            </button>
                                             <button class="btn btn-primary btn-sm change-status-btn" 
                                                     data-id="<%= c.id_complaint %>" 
                                                     data-entity="<%= c.public_entity %>"
@@ -724,6 +746,62 @@
             </div>
         </div>
 
+        <!-- Modal para ver y agregar comentarios -->
+        <div class="modal fade" id="commentsModal" tabindex="-1" aria-labelledby="commentsModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="commentsModalLabel">Comentarios Anónimos</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="complaint-info" class="mb-3 p-3 bg-light rounded">
+                            <strong>Entidad:</strong> <span id="modal-entity"></span><br>
+                            <strong>Descripción:</strong> <span id="modal-description"></span>
+                        </div>
+                        
+                        <!-- Formulario para agregar comentario -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h6 class="mb-0">Agregar Comentario Anónimo</h6>
+                            </div>
+                            <div class="card-body">
+                                <form id="commentForm">
+                                    <input type="hidden" id="comment-complaint-id" name="id_complaint">
+                                    <div class="mb-3">
+                                        <label for="comment-text" class="form-label">Comentario (mínimo 10 caracteres):</label>
+                                        <textarea class="form-control" id="comment-text" name="comment_text" rows="3" 
+                                                  placeholder="Escribe tu comentario anónimo aquí..." required minlength="10"></textarea>
+                                        <div class="form-text">Los comentarios son completamente anónimos.</div>
+                                    </div>
+                                    <div id="comment-error" class="text-danger mb-2" style="display:none;"></div>
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="bi bi-chat-left-text"></i> Agregar Comentario
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        
+                        <!-- Lista de comentarios existentes -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0">Comentarios Existentes</h6>
+                            </div>
+                            <div class="card-body">
+                                <div id="comments-list">
+                                    <div class="text-center">
+                                        <div class="spinner-border" role="status">
+                                            <span class="visually-hidden">Cargando...</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
@@ -739,6 +817,12 @@
         let statusError = document.getElementById('status-error');
         let statusIdInput = document.getElementById('status-complaint-id');
         let statusSelect = document.getElementById('complaint-status');
+
+        // Modal y lógica de comentarios
+        let commentsModal = new bootstrap.Modal(document.getElementById('commentsModal'));
+        let commentForm = document.getElementById('commentForm');
+        let commentError = document.getElementById('comment-error');
+        let commentIdInput = document.getElementById('comment-complaint-id');
 
         document.addEventListener('click', function(e) {
             // Manejar click en botón de borrar
@@ -762,6 +846,24 @@
                 document.getElementById('status-password').value = '';
                 
                 statusModal.show();
+            }
+
+            // Manejar click en botón de ver comentarios
+            if (e.target.closest('.view-comments-btn')) {
+                const btn = e.target.closest('.view-comments-btn');
+                const complaintId = btn.getAttribute('data-id');
+                const entity = btn.getAttribute('data-entity');
+                
+                // Configurar el modal
+                commentIdInput.value = complaintId;
+                document.getElementById('modal-entity').textContent = entity;
+                commentError.style.display = 'none';
+                commentForm.reset();
+                commentIdInput.value = complaintId; // Restaurar después del reset
+                
+                // Cargar detalles de la queja y comentarios
+                loadComplaintDetails(complaintId);
+                commentsModal.show();
             }
         });
 
@@ -870,7 +972,129 @@
                 });
             }
         }
+        // Función para cargar detalles de la queja y comentarios
+        function loadComplaintDetails(complaintId) {
+            const commentsList = document.getElementById('comments-list');
+            commentsList.innerHTML = `
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                </div>
+            `;
 
+            fetch(`/complaints/${complaintId}/details`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        // Actualizar información de la queja
+                        document.getElementById('modal-description').textContent = data.complaint.description;
+                        
+                        // Mostrar comentarios
+                        displayComments(data.comments);
+                    } else {
+                        commentsList.innerHTML = `
+                            <div class="alert alert-danger">
+                                Error al cargar los detalles: ${data.message}
+                            </div>
+                        `;
+                    }
+                })
+                .catch(err => {
+                    console.error('Error:', err);
+                    commentsList.innerHTML = `
+                        <div class="alert alert-danger">
+                            Error al cargar los comentarios. Por favor, intenta de nuevo.
+                        </div>
+                    `;
+                });
+        }
+
+        // Función para mostrar comentarios
+        function displayComments(comments) {
+            const commentsList = document.getElementById('comments-list');
+            
+            if (comments.length === 0) {
+                commentsList.innerHTML = `
+                    <div class="text-center text-muted">
+                        <i class="bi bi-chat"></i>
+                        <p class="mt-2">No hay comentarios aún. ¡Sé el primero en comentar!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const commentsHtml = comments.map(comment => {
+                const date = new Date(comment.created_at);
+                const formattedDate = date.toLocaleDateString('es-ES', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
+                return `
+                    <div class="comment-item border-bottom pb-3 mb-3">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="badge bg-secondary">Anónimo</span>
+                            <small class="text-muted">${formattedDate}</small>
+                        </div>
+                        <p class="mb-0">${comment.comment_text}</p>
+                    </div>
+                `;
+            }).join('');
+
+            commentsList.innerHTML = commentsHtml;
+        }
+
+        // Manejar envío de comentario
+        commentForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const complaintId = commentIdInput.value;
+            const commentText = document.getElementById('comment-text').value;
+            
+            if (commentText.trim().length < 10) {
+                commentError.textContent = 'El comentario debe tener al menos 10 caracteres';
+                commentError.style.display = 'block';
+                return;
+            }
+
+            fetch('/complaints/comments', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    id_complaint: complaintId, 
+                    comment_text: commentText.trim()
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    commentError.style.display = 'none';
+                    document.getElementById('comment-text').value = '';
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Comentario agregado',
+                        text: 'Tu comentario anónimo ha sido agregado exitosamente',
+                        confirmButtonColor: '#2296c7',
+                        timer: 2000
+                    });
+                    
+                    // Recargar comentarios
+                    loadComplaintDetails(complaintId);
+                } else {
+                    commentError.textContent = data.message || 'Error al agregar el comentario';
+                    commentError.style.display = 'block';
+                }
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                commentError.textContent = 'Error al agregar el comentario. Por favor, intenta de nuevo.';
+                commentError.style.display = 'block';
+            });
+        });
         function onCaptchaSuccess(token) {
             fetch('/verify-captcha', {
                 method: 'POST',
