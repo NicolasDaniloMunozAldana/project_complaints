@@ -4,7 +4,7 @@ const GmailEmailService = require("../src/services/GmailEmailService");
 const { PARSE_BASE, HTTP_STATUS, DEFAULT_PORT, GMAIL, EMAIL_TEMPLATE } = require("../src/config/constants");
 
 // Mock para process.env
-jest.mock('dotenv', () => ({ config: jest.fn() }));
+// jest.mock('dotenv', () => ({ config: jest.fn() }));
 
 describe("Business Logic Unit Tests", () => {
   
