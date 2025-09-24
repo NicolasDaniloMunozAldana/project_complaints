@@ -1,3 +1,17 @@
+## Changelog
+
+
+### [0.0.2] - 2025-09-24
+#### Added
+- **Delete complaints with admin password**: Admins can securely delete complaints by providing a valid administrator password, ensuring only authorized removals.
+- **Change complaint status**: The status of each complaint (e.g., pending, resolved, closed) can be updated by authorized users or admins, supporting workflow management.
+- **Add comments to complaints**: Users and/or admins can add comments to individual complaints, enabling discussion, clarification, or follow-up on each case.
+
+### [0.0.1] - 2025-08-19
+#### Added
+- **Add complaints**: Users can submit new complaints through the web interface, providing details such as the entity and description.
+- **List complaints**: All complaints are displayed in a dedicated list view, allowing users to browse and review submitted complaints.
+- **List complaint reports**: A report view aggregates and displays complaint statistics for analysis.
 # Project Complaints
 
 This project is a web application for complaint management and visualization, developed as part of a Software Engineering course. The project implements a clean, decoupled architecture following SOLID principles.
