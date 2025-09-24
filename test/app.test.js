@@ -195,7 +195,6 @@ describe("Business Logic Unit Tests", () => {
     
     test("should identify URLs of interest for email notifications", () => {
       const urlsOfInterest = ['/complaints/list', '/complaints/stats'];
-      const otherUrls = ['/', '/complaints/file', '/verify-captcha'];
       
       expect(urlsOfInterest.some(url => '/complaints/list'.includes(url))).toBe(true);
       expect(urlsOfInterest.some(url => '/complaints/stats'.includes(url))).toBe(true);
