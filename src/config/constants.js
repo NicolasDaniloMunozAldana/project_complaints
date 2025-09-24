@@ -7,7 +7,7 @@ const HTTP_STATUS = {
 };
 
 // Puerto por defecto
-const DEFAULT_PORT = 3030;
+const DEFAULT_PORT = 3000;
 
 // Base para parseInt
 const PARSE_BASE = 10;
