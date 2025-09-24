@@ -1,7 +1,7 @@
 
 require('dotenv').config();
-// Contraseña para borrar quejas: usa DELETE_PASSWORD, si no existe usa ADMIN_PASSWORD, si no existe usa 'admin123'
-const DELETE_PASSWORD = process.env.DELETE_PASSWORD || process.env.ADMIN_PASSWORD || 'admin123';
+
+const DELETE_PASSWORD = process.env.ADMIN_PASSWORD;
 
 // Eliminar queja con validación de contraseña
 exports.deleteComplaint = (req, res) => {
