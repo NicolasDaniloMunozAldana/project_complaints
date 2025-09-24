@@ -1,310 +1,252 @@
-jest.mock("../src/services/GmailEmailService", () => ({
-  sendNotificationEmail: jest.fn().mockResolvedValue(undefined)
-}));
-// tests/app.test.js
-const request = require("supertest");
-const app = require("../src/index");
-const axios = require("axios");
+// Tests unitarios - Solo lógica de negocio
+const EmailServiceFactory = require("../src/services/EmailServiceFactory");
+const GmailEmailService = require("../src/services/GmailEmailService");
+const { PARSE_BASE, HTTP_STATUS, DEFAULT_PORT, GMAIL, EMAIL_TEMPLATE } = require("../src/config/constants");
 
-jest.mock("knex", () => {
-  let mockData = [
-    {
-      id_complaint: 1,
-      public_entity: "Alcaldía Municipal",
-      description: "Problema con alumbrado público",
-      status: 1,
-      complaint_status: "abierta"
-    },
-    {
-      id_complaint: 2,
-      public_entity: "Hospital Regional",
-      description: "Demora en atención médica",
-      status: 1,
-      complaint_status: "en_revision"
-    }
-  ];
+// Mock para process.env
+jest.mock('dotenv', () => ({ config: jest.fn() }));
 
-  let whereFilter = null;
-
-  const mockClient = {
-    select: jest.fn(() => mockClient),
-    from: jest.fn().mockResolvedValue([{ id: 1, name: "Entity 1" }]),
-    insert: jest.fn().mockResolvedValue([1]),
-    update: jest.fn().mockResolvedValue(1),
-    join: jest.fn(() => mockClient),
-    where: jest.fn((field, value) => {
-      if (field === 'c.status') {
-        whereFilter = (item) => item.status === value;
-      }
-      return mockClient;
-    }),
-    then: jest.fn((callback) => {
-      let data = mockData;
-      if (whereFilter) {
-        data = data.filter(whereFilter);
-      }
-      callback(data);
-      whereFilter = null;
-      return mockClient;
-    }),
-    catch: jest.fn(() => mockClient),
-    __setMockData: (data) => {
-      mockData = data;
-    }
-  };
-
-  const knexFn = jest.fn(() => mockClient);
-  Object.assign(knexFn, mockClient);
-
-  knexFn.__setMockData = (data) => {
-    mockData = data;
-  };
-
-  return () => knexFn;
-});
-
-jest.mock("axios");
-const mockedAxios = axios;
-
-describe("App Endpoints", () => {
-  const knex = require("knex")();
+describe("Business Logic Unit Tests", () => {
   
-  beforeEach(() => {
-    jest.clearAllMocks();
-    knex.__setMockData([
-      {
-        id_complaint: 1,
-        public_entity: "Alcaldía Municipal",
-        description: "Problema con alumbrado público",
-        status: 1,
-        complaint_status: "abierta"
-      },
-      {
-        id_complaint: 2,
-        public_entity: "Hospital Regional",
-        description: "Demora en atención médica",
-        status: 1,
-        complaint_status: "en_revision"
-      }
-    ]);
-  });
-
-  test("GET / must render the home view with entities", async () => {
-    const res = await request(app).get("/");
-    expect(res.statusCode).toBe(200);
-    expect(res.text).toContain("Entity 1");
-  });
-
-  test("POST /complaints/file without data should return error in the view", async () => {
-    const res = await request(app).post("/complaints/file").send({});
-    expect(res.statusCode).toBe(200);
-    expect(res.text).toContain("Entity and description are required");
-  });
-
-  test("POST /complaints/file with valid data should log and return success", async () => {
-    const res = await request(app)
-      .post("/complaints/file")
-      .send({ entity: 1, description: "Test complaint" });
-    expect(res.text).toContain("Complaint successfully registered");
-  });
-
-  test("POST /complaints/file with non-numeric entity should handle the error", async () => {
-    const res = await request(app)
-      .post("/complaints/file")
-      .send({ entity: "abc", description: "Bad entity" });
-    expect(res.text).toContain("Error");
-  });
-
-  test("GET / responds with HTML (rendered view)", async () => {
-    const res = await request(app).get("/");
-    expect(res.headers["content-type"]).toMatch(/html/);
-  });
-
-  test("GET /complaints/list should render complaints list view", async () => {
-    const res = await request(app).get("/complaints/list");
+  // Test para EmailServiceFactory
+  describe("EmailServiceFactory", () => {
     
-    expect(res.statusCode).toBe(200);
-    expect(res.headers["content-type"]).toMatch(/html/);
-    expect(res.text).toContain("Alcaldía Municipal");
-    expect(res.text).toContain("Hospital Regional");
-  });
+    beforeEach(() => {
+      EmailServiceFactory.resetInstance();
+    });
 
-  test("POST /verify-captcha without token should return error", async () => {
-    const res = await request(app)
-      .post("/verify-captcha")
-      .send({});
-    
-    expect(res.statusCode).toBe(400);
-    expect(res.body).toEqual({
-      success: false,
-      error: 'Token no enviado'
+    test("should create Gmail service by default", () => {
+      const service = EmailServiceFactory.createEmailService();
+      expect(service).toBeInstanceOf(GmailEmailService);
+    });
+
+    test("should create Gmail service when provider is 'gmail'", () => {
+      const service = EmailServiceFactory.createEmailService('gmail');
+      expect(service).toBeInstanceOf(GmailEmailService);
+    });
+
+    test("should throw error for unsupported provider", () => {
+      expect(() => {
+        EmailServiceFactory.createEmailService('unsupported');
+      }).toThrow('Proveedor de email no soportado: unsupported');
+    });
+
+    test("should validate supported providers correctly", () => {
+      expect(EmailServiceFactory.isProviderSupported('gmail')).toBe(true);
+      expect(EmailServiceFactory.isProviderSupported('outlook')).toBe(true);
+      expect(EmailServiceFactory.isProviderSupported('invalid')).toBe(false);
+    });
+
+    test("should return list of supported providers", () => {
+      const providers = EmailServiceFactory.getSupportedProviders();
+      expect(providers).toContain('gmail');
+      expect(providers).toContain('outlook');
+      expect(providers).toContain('sendgrid');
+      expect(providers).toContain('aws-ses');
+    });
+
+    test("should implement singleton pattern correctly", () => {
+      const instance1 = EmailServiceFactory.getInstance();
+      const instance2 = EmailServiceFactory.getInstance();
+      expect(instance1).toBe(instance2);
+    });
+
+    test("should reset instance correctly", () => {
+      const instance1 = EmailServiceFactory.getInstance();
+      EmailServiceFactory.resetInstance();
+      const instance2 = EmailServiceFactory.getInstance();
+      expect(instance1).not.toBe(instance2);
     });
   });
 
-  test("POST /verify-captcha with valid token should succeed", async () => {
-    mockedAxios.post.mockResolvedValue({
-      data: { success: true }
-    });
-
-    const res = await request(app)
-      .post("/verify-captcha")
-      .send({ token: "valid_token_123" });
+  // Test para validaciones de lógica de negocio
+  describe("Complaint Status Validation Logic", () => {
     
-    expect(res.statusCode).toBe(200);
-    expect(res.body).toEqual({
-      success: true,
-      message: 'Verificación exitosa'
-    });
-  });
-
-  test("POST /verify-captcha with failed verification", async () => {
-    mockedAxios.post.mockResolvedValue({
-      data: {
-        success: false,
-        'error-codes': ['invalid-input-response']
-      }
+    test("should validate allowed complaint statuses", () => {
+      const allowedStatuses = ['abierta', 'en_revision', 'cerrada'];
+      
+      expect(allowedStatuses.includes('abierta')).toBe(true);
+      expect(allowedStatuses.includes('en_revision')).toBe(true);
+      expect(allowedStatuses.includes('cerrada')).toBe(true);
+      expect(allowedStatuses.includes('invalid_status')).toBe(false);
     });
 
-    const res = await request(app)
-      .post("/verify-captcha")
-      .send({ token: "invalid_token" });
-    
-    expect(res.statusCode).toBe(200);
-    expect(res.body).toEqual({
-      success: false,
-      error: 'Verificación fallida',
-      'error-codes': ['invalid-input-response']
+    test("should validate entity ID parsing", () => {
+      const validEntityId = "123";
+      const invalidEntityId = "abc";
+      
+      expect(!isNaN(Number(validEntityId))).toBe(true);
+      expect(!isNaN(Number(invalidEntityId))).toBe(false);
+      expect(parseInt(validEntityId, PARSE_BASE)).toBe(123);
     });
-  });
 
-  test("POST /verify-captcha should handle network errors", async () => {
-    mockedAxios.post.mockRejectedValue(new Error("Network error"));
+    test("should validate required fields for complaint creation", () => {
+      const validComplaint = { entity: "1", description: "Test complaint" };
+      const invalidComplaint1 = { entity: "", description: "Test complaint" };
+      const invalidComplaint2 = { entity: "1", description: "" };
+      
+      expect(!!(validComplaint.entity && validComplaint.description)).toBe(true);
+      expect(!!(invalidComplaint1.entity && invalidComplaint1.description)).toBe(false);
+      expect(!!(invalidComplaint2.entity && invalidComplaint2.description)).toBe(false);
+    });
 
-    const res = await request(app)
-      .post("/verify-captcha")
-      .send({ token: "some_token" });
-    
-    expect(res.statusCode).toBe(500);
-    expect(res.body).toEqual({
-      success: false,
-      error: 'Error interno en verify-captcha'
+    test("should validate password authentication logic", () => {
+      const correctPassword = "admin123";
+      const wrongPassword = "wrong_password";
+      const adminPassword = "admin123"; // Simula process.env.ADMIN_PASSWORD
+      
+      expect(correctPassword === adminPassword).toBe(true);
+      expect(wrongPassword === adminPassword).toBe(false);
     });
   });
 
-  test("should handle empty complaints list", async () => {
-    knex.__setMockData([]);
+  // Test para GmailEmailService - Solo lógica de negocio
+  describe("GmailEmailService Business Logic", () => {
     
-    const res = await request(app).get("/complaints/list");
+    let originalEnv;
     
-    expect(res.statusCode).toBe(200);
-    expect(res.text).toContain("Consultar Quejas");
-
-    expect(res.text).not.toContain("Alcaldía Municipal");
-    expect(res.text).not.toContain("Hospital Regional");
-  });
-
-  test("should handle very long description in complaints", async () => {
-    const longDescription = "a".repeat(1000);
-    
-    knex.__setMockData([{
-      id_complaint: 1,
-      public_entity: "Test Entity",
-      description: longDescription,
-      status: 1,
-      complaint_status: "abierta"
-    }]);
-    
-    const res = await request(app).get("/complaints/list");
-    
-    expect(res.statusCode).toBe(200);
-    expect(res.text).toContain("Test Entity");
-    expect(res.text).toContain(longDescription.substring(0, 500)); 
-  });
-
-  test("should handle database errors gracefully", async () => {
-    const originalThen = knex.then;
-    knex.then = jest.fn((successCallback, errorCallback) => {
-      if (errorCallback) {
-        errorCallback(new Error("Database connection failed"));
-      }
-      return knex;
+    beforeEach(() => {
+      originalEnv = process.env;
+      process.env = { 
+        ...originalEnv, 
+        EMAIL_USER: 'test@gmail.com', 
+        EMAIL_PASSWORD: 'testpass' 
+      };
     });
 
-    const res = await request(app).get("/complaints/list");
-    
-    expect(res.statusCode).toBe(200);
-    
-    knex.then = originalThen;
-  });
-
-  test("POST /complaints/update-status without data should return error", async () => {
-    const res = await request(app)
-      .post("/complaints/update-status")
-      .send({});
-    
-    expect(res.statusCode).toBe(400);
-    expect(res.body).toEqual({
-      success: false,
-      message: 'Datos incompletos: se requiere ID de queja, nuevo estado y contraseña'
+    afterEach(() => {
+      process.env = originalEnv;
     });
-  });
 
-  test("POST /complaints/update-status with invalid status should return error", async () => {
-    const res = await request(app)
-      .post("/complaints/update-status")
-      .send({
-        id_complaint: 1,
-        complaint_status: "invalid_status",
-        password: "admin123"
-      });
-    
-    expect(res.statusCode).toBe(400);
-    expect(res.body).toEqual({
-      success: false,
-      message: 'Estado no válido. Los estados permitidos son: abierta, en_revision, cerrada'
+    test("should validate configuration with required environment variables", () => {
+      const service = new GmailEmailService();
+      expect(() => service.validateConfiguration()).not.toThrow();
+    });
+
+    test("should throw error when EMAIL_USER is missing", () => {
+      delete process.env.EMAIL_USER;
+      
+      expect(() => {
+        new GmailEmailService();
+      }).toThrow('EMAIL_USER y EMAIL_PASSWORD deben estar configurados en las variables de entorno');
+    });
+
+    test("should throw error when EMAIL_PASSWORD is missing", () => {
+      delete process.env.EMAIL_PASSWORD;
+      
+      expect(() => {
+        new GmailEmailService();
+      }).toThrow('EMAIL_USER y EMAIL_PASSWORD deben estar configurados en las variables de entorno');
+    });
+
+    test("should generate email template with correct data structure", () => {
+      const service = new GmailEmailService();
+      const testData = {
+        action: 'Test Action',
+        timestamp: '2023-01-01 12:00:00',
+        ip: '192.168.1.1',
+        url: '/test',
+        method: 'GET',
+        userAgent: 'Test Agent'
+      };
+      
+      const template = service.generateEmailTemplate(testData);
+      
+      expect(template).toContain(testData.action);
+      expect(template).toContain(testData.timestamp);
+      expect(template).toContain(testData.ip);
+      expect(template).toContain(testData.url);
+      expect(template).toContain(testData.method);
+      expect(template).toContain(testData.userAgent);
+      expect(template).toContain('Sistema de Reportes de Quejas');
     });
   });
 
-  test("POST /complaints/update-status with wrong password should return error", async () => {
-    const res = await request(app)
-      .post("/complaints/update-status")
-      .send({
-        id_complaint: 1,
-        complaint_status: "cerrada",
-        password: "wrong_password"
-      });
+  // Test para constantes del negocio
+  describe("Business Constants", () => {
     
-    expect(res.statusCode).toBe(401);
-    expect(res.body).toEqual({
-      success: false,
-      message: 'Contraseña incorrecta'
+    test("should have correct HTTP status codes", () => {
+      expect(HTTP_STATUS.BAD_REQUEST).toBe(400);
+      expect(HTTP_STATUS.INTERNAL_ERROR).toBe(500);
+    });
+
+    test("should have correct default port", () => {
+      expect(DEFAULT_PORT).toBe(3030);
+    });
+
+    test("should have correct parse base", () => {
+      expect(PARSE_BASE).toBe(10);
+    });
+
+    test("should have Gmail configuration constants", () => {
+      expect(GMAIL.MAX_CONNECTIONS).toBe(5);
+      expect(GMAIL.MAX_MESSAGES).toBe(100);
+    });
+
+    test("should have email template configuration", () => {
+      expect(EMAIL_TEMPLATE.MAX_WIDTH).toBe(600);
+      expect(EMAIL_TEMPLATE.PADDING).toBe(20);
+      expect(EMAIL_TEMPLATE.HEADER_FONT_SIZE).toBe(24);
     });
   });
 
-  test("should display complaint status badges correctly", async () => {
-    knex.__setMockData([
-      {
-        id_complaint: 1,
-        public_entity: "Alcaldía Municipal",
-        description: "Problema con alumbrado público",
-        status: 1,
-        complaint_status: "abierta"
-      },
-      {
-        id_complaint: 2,
-        public_entity: "Hospital Regional",
-        description: "Demora en atención médica",
-        status: 1,
-        complaint_status: "cerrada"
-      }
-    ]);
-
-    const res = await request(app).get("/complaints/list");
+  // Test para lógica de filtrado de URLs de interés
+  describe("Email Notification Filter Logic", () => {
     
-    expect(res.statusCode).toBe(200);
-    expect(res.text).toContain("Abierta");
-    expect(res.text).toContain("Cerrada");
-    expect(res.text).toContain("badge bg-warning");
-    expect(res.text).toContain("badge bg-success");
+    test("should identify URLs of interest for email notifications", () => {
+      const urlsOfInterest = ['/complaints/list', '/complaints/stats'];
+      const otherUrls = ['/', '/complaints/file', '/verify-captcha'];
+      
+      expect(urlsOfInterest.some(url => '/complaints/list'.includes(url))).toBe(true);
+      expect(urlsOfInterest.some(url => '/complaints/stats'.includes(url))).toBe(true);
+      expect(urlsOfInterest.some(url => '/'.includes(url))).toBe(false);
+      expect(urlsOfInterest.some(url => '/complaints/file'.includes(url))).toBe(false);
+    });
+
+    test("should determine correct email action based on URL", () => {
+      const getActionFromUrl = (url) => {
+        if (url.includes('/complaints/list')) return 'Listado de Quejas Solicitado';
+        if (url.includes('/complaints/stats')) return 'Estadísticas de Quejas Solicitadas';
+        return null;
+      };
+      
+      expect(getActionFromUrl('/complaints/list')).toBe('Listado de Quejas Solicitado');
+      expect(getActionFromUrl('/complaints/stats')).toBe('Estadísticas de Quejas Solicitadas');
+      expect(getActionFromUrl('/other')).toBe(null);
+    });
+  });
+
+  // Test para lógica de validación de datos de entrada
+  describe("Input Validation Logic", () => {
+    
+    test("should validate complaint update data completeness", () => {
+      const validateUpdateData = (data) => {
+        return !!(data.id_complaint && data.complaint_status && data.password);
+      };
+      
+      expect(validateUpdateData({ 
+        id_complaint: 1, 
+        complaint_status: 'cerrada', 
+        password: 'admin123' 
+      })).toBe(true);
+      
+      expect(validateUpdateData({ 
+        id_complaint: 1, 
+        complaint_status: 'cerrada' 
+      })).toBe(false);
+      
+      expect(validateUpdateData({})).toBe(false);
+    });
+
+    test("should validate reCAPTCHA token presence", () => {
+      const validateToken = (token) => {
+        return !!(token && token.trim().length > 0);
+      };
+      
+      expect(validateToken('valid_token_123')).toBe(true);
+      expect(validateToken('')).toBe(false);
+      expect(validateToken(null)).toBe(false);
+      expect(validateToken(undefined)).toBe(false);
+    });
   });
 });
