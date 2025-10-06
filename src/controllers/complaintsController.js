@@ -1,5 +1,6 @@
 
 require('dotenv').config();
+const knex = require('../config/db');
 
 const DELETE_PASSWORD = process.env.ADMIN_PASSWORD;
 
@@ -27,7 +28,6 @@ exports.deleteComplaint = (req, res) => {
             res.status(500).json({ success: false, message: 'Error al borrar la queja' });
         });
 };
-const knex = require('../config/db');
 
 exports.listComplaints = (req, res) => {
     knex('COMPLAINTS as c')
