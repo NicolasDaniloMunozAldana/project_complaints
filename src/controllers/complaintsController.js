@@ -45,18 +45,23 @@ exports.listComplaints = (req, res) => {
 // Importar constantes
 const { PARSE_BASE } = require('../config/constants');
 
+// Helper function para renderizar home con entidades y alert
+const renderHomeWithAlert = (res, alert) => {
+    return knex.select().from('PUBLIC_ENTITYS').then((results) => {
+        res.render('home', {
+            entitys: results,
+            alert: alert
+        });
+    });
+};
+
 exports.fileComplaint = (req, res) => {
     const { entity, description } = req.body;
     if (!entity || !description || isNaN(Number(entity))) {
-        return knex.select().from('PUBLIC_ENTITYS').then((results) => {
-            res.render('home', {
-                entitys: results,
-                alert: {
-                    type: 'error',
-                    title: 'Error',
-                    message: 'Entity and description are required'
-                }
-            });
+        return renderHomeWithAlert(res, {
+            type: 'error',
+            title: 'Error',
+            message: 'Entity and description are required'
         });
     }
     knex('COMPLAINTS')
@@ -65,28 +70,18 @@ exports.fileComplaint = (req, res) => {
             description: description,
         })
         .then(() => {
-            knex.select().from('PUBLIC_ENTITYS').then((results) => {
-                res.render('home', {
-                    entitys: results,
-                    alert: {
-                        type: 'success',
-                        title: 'Éxito',
-                        message: 'Complaint successfully registered'
-                    }
-                });
+            renderHomeWithAlert(res, {
+                type: 'success',
+                title: 'Éxito',
+                message: 'Complaint successfully registered'
             });
         })
         .catch(err => {
             console.error(err);
-            knex.select().from('PUBLIC_ENTITYS').then((results) => {
-                res.render('home', {
-                    entitys: results,
-                    alert: {
-                        type: 'error',
-                        title: 'Error',
-                        message: 'Error saving complaint'
-                    }
-                });
+            renderHomeWithAlert(res, {
+                type: 'error',
+                title: 'Error',
+                message: 'Error saving complaint'
             });
         });
 };
