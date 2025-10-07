@@ -1,315 +1,222 @@
 
-require('dotenv').config();
+const complaintsService = require('../services/complaintsService');
 
-const DELETE_PASSWORD = process.env.ADMIN_PASSWORD;
-
-// Eliminar queja con validación de contraseña
-exports.deleteComplaint = (req, res) => {
-    const { id_complaint, password } = req.body;
-    if (!id_complaint || !password) {
-        return res.status(400).json({ success: false, message: 'Datos incompletos' });
-    }
-    if (password !== DELETE_PASSWORD) {
-        return res.status(401).json({ success: false, message: 'Contraseña incorrecta' });
-    }
-    knex('COMPLAINTS')
-        .where('id_complaint', id_complaint)
-        .update({ status: 0 })
-        .then(count => {
-            if (count > 0) {
-                res.json({ success: true });
-            } else {
-                res.status(404).json({ success: false, message: 'Queja no encontrada' });
-            }
-        })
-        .catch(err => {
-            console.error(err);
-            res.status(500).json({ success: false, message: 'Error al borrar la queja' });
-        });
-};
-const knex = require('../config/db');
-
-exports.listComplaints = (req, res) => {
-    knex('COMPLAINTS as c')
-        .join('PUBLIC_ENTITYS as p', 'c.id_public_entity', 'p.id_public_entity')
-        .select('c.id_complaint', 'p.name as public_entity', 'c.description', 'c.complaint_status', 'c.created_at')
-        .where('c.status', 1)
-        .orderBy('c.created_at', 'desc')
-        .then((results) => {
-            res.render('complaints_list', { complaints: results });
-        })
-        .catch(err => console.error(err));
-};
-
-
-// Importar constantes
-const { PARSE_BASE } = require('../config/constants');
-
-exports.fileComplaint = (req, res) => {
-    const { entity, description } = req.body;
-    if (!entity || !description || isNaN(Number(entity))) {
-        return knex.select().from('PUBLIC_ENTITYS').then((results) => {
+/**
+ * Helper function para renderizar home con entidades y alert
+ * @param {Object} res - Response object
+ * @param {Object} alert - Alert object
+ */
+const renderHomeWithAlert = async (res, alert) => {
+    try {
+        const entitiesResult = await complaintsService.getAllEntities();
+        
+        if (entitiesResult.success) {
             res.render('home', {
-                entitys: results,
-                alert: {
-                    type: 'error',
-                    title: 'Error',
-                    message: 'Entity and description are required'
-                }
+                entitys: entitiesResult.data,
+                alert: alert
             });
-        });
-    }
-    knex('COMPLAINTS')
-        .insert({
-            id_public_entity: parseInt(entity, PARSE_BASE),
-            description: description,
-        })
-        .then(() => {
-            knex.select().from('PUBLIC_ENTITYS').then((results) => {
-                res.render('home', {
-                    entitys: results,
-                    alert: {
-                        type: 'success',
-                        title: 'Éxito',
-                        message: 'Complaint successfully registered'
-                    }
-                });
-            });
-        })
-        .catch(err => {
-            console.error(err);
-            knex.select().from('PUBLIC_ENTITYS').then((results) => {
-                res.render('home', {
-                    entitys: results,
-                    alert: {
-                        type: 'error',
-                        title: 'Error',
-                        message: 'Error saving complaint'
-                    }
-                });
-            });
-        });
-};
-
-exports.complaintsStats = (req, res) => {
-    Promise.all([
-        // Estadísticas por entidad
-        knex('COMPLAINTS as c')
-            .join('PUBLIC_ENTITYS as p', 'c.id_public_entity', 'p.id_public_entity')
-            .select('p.name as public_entity')
-            .count('c.id_complaint as total_complaints')
-            .where('c.status', 1)
-            .groupBy('p.id_public_entity', 'p.name')
-            .orderBy('total_complaints', 'desc'),
-        
-        // Estadísticas por estado de queja
-        knex('COMPLAINTS')
-            .select('complaint_status')
-            .count('id_complaint as total')
-            .where('status', 1)
-            .groupBy('complaint_status')
-    ])
-    .then(([entityStats, statusStats]) => {
-        res.render('complaints_stats', { 
-            stats: entityStats,
-            statusStats: statusStats
-        });
-    })
-    .catch(err => {
-        console.error(err);
-        res.status(500).send('Error al obtener estadísticas');
-    });
-};
-
-// Cambiar estado de queja con validación de contraseña
-exports.updateComplaintStatus = (req, res) => {
-    const { id_complaint, complaint_status, password } = req.body;
-    
-    // Validar datos requeridos
-    if (!id_complaint || !complaint_status || !password) {
-        return res.status(400).json({ 
-            success: false, 
-            message: 'Datos incompletos: se requiere ID de queja, nuevo estado y contraseña' 
-        });
-    }
-
-    // Validar estados permitidos
-    const allowedStatuses = ['abierta', 'en_revision', 'cerrada'];
-    if (!allowedStatuses.includes(complaint_status)) {
-        return res.status(400).json({ 
-            success: false, 
-            message: 'Estado no válido. Los estados permitidos son: abierta, en_revision, cerrada' 
-        });
-    }
-
-    // Validar contraseña
-    if (password !== DELETE_PASSWORD) {
-        return res.status(401).json({ 
-            success: false, 
-            message: 'Contraseña incorrecta' 
-        });
-    }
-
-    // Actualizar el estado de la queja
-    knex('COMPLAINTS')
-        .where('id_complaint', id_complaint)
-        .update({ complaint_status: complaint_status })
-        .then(count => {
-            if (count > 0) {
-                res.json({ 
-                    success: true, 
-                    message: `Estado de la queja actualizado a: ${complaint_status}` 
-                });
-            } else {
-                res.status(404).json({ 
-                    success: false, 
-                    message: 'Queja no encontrada' 
-                });
-            }
-        })
-        .catch(err => {
-            console.error('Error al actualizar estado de queja:', err);
-            res.status(500).json({ 
-                success: false, 
-                message: 'Error al actualizar el estado de la queja' 
-            });
-        });
-};
-
-// Obtener comentarios anónimos de una queja específica
-exports.getComments = (req, res) => {
-    const { id_complaint } = req.params;
-    
-    if (!id_complaint || isNaN(Number(id_complaint))) {
-        return res.status(400).json({ 
-            success: false, 
-            message: 'ID de queja inválido' 
-        });
-    }
-
-    knex('ANONYMOUS_COMMENTS')
-        .select('id_comment', 'comment_text', 'created_at')
-        .where('id_complaint', id_complaint)
-        .where('status', 1)
-        .orderBy('created_at', 'desc')
-        .then((comments) => {
-            res.json({ 
-                success: true, 
-                comments: comments 
-            });
-        })
-        .catch(err => {
-            console.error('Error al obtener comentarios:', err);
-            res.status(500).json({ 
-                success: false, 
-                message: 'Error al obtener los comentarios' 
-            });
-        });
-};
-
-// Agregar comentario anónimo a una queja
-exports.addComment = (req, res) => {
-    const { id_complaint, comment_text } = req.body;
-    
-    // Validar datos requeridos
-    if (!id_complaint || !comment_text) {
-        return res.status(400).json({ 
-            success: false, 
-            message: 'ID de queja y texto del comentario son requeridos' 
-        });
-    }
-
-    // Validar longitud mínima del comentario
-    if (comment_text.trim().length < 10) {
-        return res.status(400).json({ 
-            success: false, 
-            message: 'El comentario debe tener al menos 10 caracteres' 
-        });
-    }
-
-    // Verificar que la queja existe y está activa
-    knex('COMPLAINTS')
-        .select('id_complaint')
-        .where('id_complaint', id_complaint)
-        .where('status', 1)
-        .first()
-        .then((complaint) => {
-            if (!complaint) {
-                return res.status(404).json({ 
-                    success: false, 
-                    message: 'Queja no encontrada o inactiva' 
-                });
-            }
-
-            // Insertar el comentario
-            return knex('ANONYMOUS_COMMENTS')
-                .insert({
-                    id_complaint: id_complaint,
-                    comment_text: comment_text.trim()
-                });
-        })
-        .then(() => {
-            res.json({ 
-                success: true, 
-                message: 'Comentario agregado exitosamente' 
-            });
-        })
-        .catch(err => {
-            console.error('Error al agregar comentario:', err);
-            res.status(500).json({ 
-                success: false, 
-                message: 'Error al agregar el comentario' 
-            });
-        });
-};
-
-// Obtener detalles completos de una queja con sus comentarios
-exports.getComplaintDetails = (req, res) => {
-    const { id_complaint } = req.params;
-    
-    if (!id_complaint || isNaN(Number(id_complaint))) {
-        return res.status(400).json({ 
-            success: false, 
-            message: 'ID de queja inválido' 
-        });
-    }
-
-    Promise.all([
-        // Obtener datos de la queja
-        knex('COMPLAINTS as c')
-            .join('PUBLIC_ENTITYS as p', 'c.id_public_entity', 'p.id_public_entity')
-            .select('c.id_complaint', 'p.name as public_entity', 'c.description', 
-                   'c.complaint_status', 'c.created_at', 'c.updated_at')
-            .where('c.id_complaint', id_complaint)
-            .where('c.status', 1)
-            .first(),
-        
-        // Obtener comentarios de la queja
-        knex('ANONYMOUS_COMMENTS')
-            .select('id_comment', 'comment_text', 'created_at')
-            .where('id_complaint', id_complaint)
-            .where('status', 1)
-            .orderBy('created_at', 'desc')
-    ])
-    .then(([complaint, comments]) => {
-        if (!complaint) {
-            return res.status(404).json({ 
-                success: false, 
-                message: 'Queja no encontrada' 
+        } else {
+            res.status(entitiesResult.statusCode).render('error', {
+                message: entitiesResult.message
             });
         }
+    } catch (error) {
+        console.error('Error rendering home:', error);
+        res.status(500).render('error', {
+            message: 'Error interno del servidor'
+        });
+    }
+};
 
-        res.json({ 
-            success: true, 
-            complaint: complaint,
-            comments: comments 
+/**
+ * Listar todas las quejas activas
+ */
+exports.listComplaints = async (req, res) => {
+    try {
+        const result = await complaintsService.getAllComplaints();
+        
+        if (result.success) {
+            res.render('complaints_list', { complaints: result.data });
+        } else {
+            res.status(result.statusCode).render('error', {
+                message: result.message
+            });
+        }
+    } catch (error) {
+        console.error('Error in listComplaints controller:', error);
+        res.status(500).render('error', {
+            message: 'Error interno del servidor'
         });
-    })
-    .catch(err => {
-        console.error('Error al obtener detalles de la queja:', err);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Error al obtener los detalles de la queja' 
+    }
+};
+
+/**
+ * Crear una nueva queja
+ */
+exports.fileComplaint = async (req, res) => {
+    try {
+        const { entity, description } = req.body;
+        
+        const result = await complaintsService.createComplaint(entity, description);
+        
+        if (result.success) {
+            await renderHomeWithAlert(res, {
+                type: 'success',
+                title: 'Éxito',
+                message: result.message
+            });
+        } else {
+            await renderHomeWithAlert(res, {
+                type: 'error',
+                title: 'Error',
+                message: result.message
+            });
+        }
+    } catch (error) {
+        console.error('Error in fileComplaint controller:', error);
+        await renderHomeWithAlert(res, {
+            type: 'error',
+            title: 'Error',
+            message: 'Error interno del servidor'
         });
-    });
+    }
+};
+
+/**
+ * Eliminar una queja (soft delete)
+ */
+exports.deleteComplaint = async (req, res) => {
+    try {
+        const { id_complaint, password } = req.body;
+        
+        const result = await complaintsService.deleteComplaint(id_complaint, password);
+        
+        res.status(result.statusCode).json({
+            success: result.success,
+            message: result.message
+        });
+    } catch (error) {
+        console.error('Error in deleteComplaint controller:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor'
+        });
+    }
+};
+
+/**
+ * Obtener estadísticas de quejas
+ */
+exports.complaintsStats = async (req, res) => {
+    try {
+        const result = await complaintsService.getComplaintsStats();
+        
+        if (result.success) {
+            res.render('complaints_stats', { 
+                stats: result.data.entityStats,
+                statusStats: result.data.statusStats
+            });
+        } else {
+            res.status(result.statusCode).render('error', {
+                message: result.message
+            });
+        }
+    } catch (error) {
+        console.error('Error in complaintsStats controller:', error);
+        res.status(500).render('error', {
+            message: 'Error interno del servidor'
+        });
+    }
+};
+
+/**
+ * Actualizar el estado de una queja
+ */
+exports.updateComplaintStatus = async (req, res) => {
+    try {
+        const { id_complaint, complaint_status, password } = req.body;
+        
+        const result = await complaintsService.updateComplaintStatus(id_complaint, complaint_status, password);
+        
+        res.status(result.statusCode).json({
+            success: result.success,
+            message: result.message
+        });
+    } catch (error) {
+        console.error('Error in updateComplaintStatus controller:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor'
+        });
+    }
+};
+
+/**
+ * Obtener comentarios de una queja específica
+ */
+exports.getComments = async (req, res) => {
+    try {
+        const { id_complaint } = req.params;
+        
+        const result = await complaintsService.getComments(id_complaint);
+        
+        res.status(result.statusCode).json({
+            success: result.success,
+            comments: result.data || [],
+            message: result.message
+        });
+    } catch (error) {
+        console.error('Error in getComments controller:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor'
+        });
+    }
+};
+
+/**
+ * Agregar comentario anónimo a una queja
+ */
+exports.addComment = async (req, res) => {
+    try {
+        const { id_complaint, comment_text } = req.body;
+        
+        const result = await complaintsService.addComment(id_complaint, comment_text);
+        
+        res.status(result.statusCode).json({
+            success: result.success,
+            message: result.message,
+            data: result.data
+        });
+    } catch (error) {
+        console.error('Error in addComment controller:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor'
+        });
+    }
+};
+
+/**
+ * Obtener detalles completos de una queja con sus comentarios
+ */
+exports.getComplaintDetails = async (req, res) => {
+    try {
+        const { id_complaint } = req.params;
+        
+        const result = await complaintsService.getComplaintDetails(id_complaint);
+        
+        res.status(result.statusCode).json({
+            success: result.success,
+            complaint: result.data?.complaint || null,
+            comments: result.data?.comments || [],
+            message: result.message
+        });
+    } catch (error) {
+        console.error('Error in getComplaintDetails controller:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor'
+        });
+    }
 };
