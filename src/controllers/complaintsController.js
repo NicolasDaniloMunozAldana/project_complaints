@@ -1,5 +1,5 @@
 
-const complaintsService = require('../services/complaintsService');
+const complaintsService = require('../services/complaintService');
 
 /**
  * Helper function para renderizar home con entidades y alert
