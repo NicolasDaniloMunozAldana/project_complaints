@@ -1,4 +1,5 @@
-const knex = require('../config/db');
+
+const { Comment } = require('../models');
 
 class CommentsRepository {
     /**
@@ -7,11 +8,14 @@ class CommentsRepository {
      * @returns {Promise<Array>} Lista de comentarios
      */
     async findByComplaintId(id_complaint) {
-        return await knex('ANONYMOUS_COMMENTS')
-            .select('id_comment', 'comment_text', 'created_at')
-            .where('id_complaint', id_complaint)
-            .where('status', 1)
-            .orderBy('created_at', 'desc');
+        return await Comment.findAll({
+            attributes: ['id_comment', 'comment_text', 'created_at'],
+            where: {
+                id_complaint,
+                status: 1
+            },
+            order: [['created_at', 'DESC']]
+        });
     }
 
     /**
@@ -22,15 +26,12 @@ class CommentsRepository {
      * @returns {Promise<number>} ID del comentario creado
      */
     async create(commentData) {
-        const [id] = await knex('ANONYMOUS_COMMENTS')
-            .insert({
-                id_complaint: commentData.id_complaint,
-                comment_text: commentData.comment_text,
-                status: 1 // Activo por defecto
-            })
-            .returning('id_comment');
-        
-        return id;
+        const comment = await Comment.create({
+            id_complaint: commentData.id_complaint,
+            comment_text: commentData.comment_text,
+            status: 1 // Activo por defecto
+        });
+        return comment.id_comment;
     }
 }
 

@@ -58,9 +58,17 @@ class ComplaintsService {
     async getAllComplaints() {
         try {
             const complaints = await complaintsRepository.findAllActive();
+            // Mapear para aplanar el nombre de la entidad
+            const mappedComplaints = complaints.map(c => ({
+                id_complaint: c.id_complaint,
+                description: c.description,
+                complaint_status: c.complaint_status,
+                created_at: c.created_at,
+                public_entity: c.Entity ? c.Entity.name : '',
+            }));
             return {
                 success: true,
-                data: complaints,
+                data: mappedComplaints,
                 statusCode: 200
             };
         } catch (error) {
