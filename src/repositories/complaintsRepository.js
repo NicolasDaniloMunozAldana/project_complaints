@@ -1,4 +1,5 @@
-const knex = require('../config/db');
+
+const { Complaint, Entity } = require('../models');
 
 class ComplaintsRepository {
     /**
@@ -9,16 +10,13 @@ class ComplaintsRepository {
      * @returns {Promise<number>} ID de la queja creada
      */
     async create(complaintData) {
-        const [id] = await knex('COMPLAINTS')
-            .insert({
-                id_public_entity: complaintData.id_public_entity,
-                description: complaintData.description,
-                complaint_status: 'abierta', // Estado inicial por defecto
-                status: 1 // Activo por defecto
-            })
-            .returning('id_complaint');
-
-        return id;
+        const complaint = await Complaint.create({
+            id_public_entity: complaintData.id_public_entity,
+            description: complaintData.description,
+            complaint_status: 'abierta', // Estado inicial por defecto
+            status: 1 // Activo por defecto
+        });
+        return complaint.id_complaint;
     }
 
     /**
@@ -26,17 +24,15 @@ class ComplaintsRepository {
      * @returns {Promise<Array>} Lista de quejas
      */
     async findAllActive() {
-        return await knex('COMPLAINTS as c')
-            .join('PUBLIC_ENTITYS as p', 'c.id_public_entity', 'p.id_public_entity')
-            .select(
-                'c.id_complaint', 
-                'p.name as public_entity', 
-                'c.description', 
-                'c.complaint_status', 
-                'c.created_at'
-            )
-            .where('c.status', 1)
-            .orderBy('c.created_at', 'desc');
+        return await Complaint.findAll({
+            attributes: ['id_complaint', 'description', 'complaint_status', 'created_at'],
+            where: { status: 1 },
+            include: [{
+                model: Entity,
+                attributes: ['name'],
+            }],
+            order: [['created_at', 'DESC']]
+        });
     }
 
     /**
@@ -45,19 +41,14 @@ class ComplaintsRepository {
      * @returns {Promise<Object|null>} Datos de la queja o null si no existe
      */
     async findById(id_complaint) {
-        return await knex('COMPLAINTS as c')
-            .join('PUBLIC_ENTITYS as p', 'c.id_public_entity', 'p.id_public_entity')
-            .select(
-                'c.id_complaint', 
-                'p.name as public_entity', 
-                'c.description',
-                'c.complaint_status', 
-                'c.created_at', 
-                'c.updated_at'
-            )
-            .where('c.id_complaint', id_complaint)
-            .where('c.status', 1)
-            .first();
+        return await Complaint.findOne({
+            attributes: ['id_complaint', 'description', 'complaint_status', 'created_at', 'updated_at'],
+            where: { id_complaint, status: 1 },
+            include: [{
+                model: Entity,
+                attributes: ['name'],
+            }]
+        });
     }
 
     /**
@@ -66,10 +57,10 @@ class ComplaintsRepository {
      * @returns {Promise<boolean>} true si se eliminó, false si no se encontró
      */
     async softDelete(id_complaint) {
-        const count = await knex('COMPLAINTS')
-            .where('id_complaint', id_complaint)
-            .update({ status: 0 });
-
+        const [count] = await Complaint.update(
+            { status: 0 },
+            { where: { id_complaint } }
+        );
         return count > 0;
     }
 
@@ -80,13 +71,10 @@ class ComplaintsRepository {
      * @returns {Promise<boolean>} true si se actualizó, false si no se encontró
      */
     async updateStatus(id_complaint, complaint_status) {
-        const count = await knex('COMPLAINTS')
-            .where('id_complaint', id_complaint)
-            .update({ 
-                complaint_status: complaint_status,
-                updated_at: knex.fn.now()
-            });
-
+        const [count] = await Complaint.update(
+            { complaint_status, updated_at: new Date() },
+            { where: { id_complaint } }
+        );
         return count > 0;
     }
 
@@ -95,13 +83,16 @@ class ComplaintsRepository {
      * @returns {Promise<Array>} Estadísticas por entidad
      */
     async getStatsByEntity() {
-        return await knex('COMPLAINTS as c')
-            .join('PUBLIC_ENTITYS as p', 'c.id_public_entity', 'p.id_public_entity')
-            .select('p.name as public_entity')
-            .count('c.id_complaint as total_complaints')
-            .where('c.status', 1)
-            .groupBy('p.id_public_entity', 'p.name')
-            .orderBy('total_complaints', 'desc');
+        // Sequelize no soporta count con join y groupBy tan directo, así que usamos query cruda
+        const [results] = await Complaint.sequelize.query(`
+            SELECT p.name as public_entity, COUNT(c.id_complaint) as total_complaints
+            FROM COMPLAINTS c
+            JOIN PUBLIC_ENTITYS p ON c.id_public_entity = p.id_public_entity
+            WHERE c.status = 1
+            GROUP BY p.id_public_entity, p.name
+            ORDER BY total_complaints DESC
+        `);
+        return results;
     }
 
     /**
@@ -109,11 +100,13 @@ class ComplaintsRepository {
      * @returns {Promise<Array>} Estadísticas por estado
      */
     async getStatsByStatus() {
-        return await knex('COMPLAINTS')
-            .select('complaint_status')
-            .count('id_complaint as total')
-            .where('status', 1)
-            .groupBy('complaint_status');
+        const [results] = await Complaint.sequelize.query(`
+            SELECT complaint_status, COUNT(id_complaint) as total
+            FROM COMPLAINTS
+            WHERE status = 1
+            GROUP BY complaint_status
+        `);
+        return results;
     }
 }
 

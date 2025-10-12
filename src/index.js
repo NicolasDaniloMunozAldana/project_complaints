@@ -8,9 +8,8 @@ require('dotenv').config(); // Carga variables desde .env
 const path = require('path');
 const axios = require('axios');
 
-// Configuración de la base de datos
-const knex = require('./config/db');
-app.locals.knex = knex;
+
+// (Knex removed, now using Sequelize models directly in repositories/services)
 
 // Configuración del motor de vistas y carpeta de vistas
 app.set('view engine', 'ejs');
