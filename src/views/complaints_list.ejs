@@ -691,61 +691,6 @@
         </div>
     </div>
 
-        <!-- Modal para confirmación de borrado -->
-        <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="deleteModalLabel">Confirmar Borrado de Queja</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                    </div>
-                    <div class="modal-body">
-                        <form id="deleteForm">
-                            <input type="hidden" id="delete-complaint-id" name="id_complaint">
-                            <div class="mb-3">
-                                <label for="delete-password" class="form-label">Contraseña para borrar:</label>
-                                <input type="password" class="form-control" id="delete-password" name="password" required>
-                            </div>
-                            <div id="delete-error" class="text-danger mb-2" style="display:none;"></div>
-                            <button type="submit" class="btn btn-danger">Borrar</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Modal para cambiar estado de queja -->
-        <div class="modal fade" id="statusModal" tabindex="-1" aria-labelledby="statusModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="statusModalLabel">Cambiar Estado de Queja</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                    </div>
-                    <div class="modal-body">
-                        <form id="statusForm">
-                            <input type="hidden" id="status-complaint-id" name="id_complaint">
-                            <div class="mb-3">
-                                <label for="complaint-status" class="form-label">Nuevo Estado:</label>
-                                <select class="form-select" id="complaint-status" name="complaint_status" required>
-                                    <option value="">Selecciona un estado</option>
-                                    <option value="abierta">Abierta</option>
-                                    <option value="en_revision">En Revisión</option>
-                                    <option value="cerrada">Cerrada</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label for="status-password" class="form-label">Contraseña para cambiar estado:</label>
-                                <input type="password" class="form-control" id="status-password" name="password" required>
-                            </div>
-                            <div id="status-error" class="text-danger mb-2" style="display:none;"></div>
-                            <button type="submit" class="btn btn-primary">Cambiar Estado</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- Modal para ver y agregar comentarios -->
         <div class="modal fade" id="commentsModal" tabindex="-1" aria-labelledby="commentsModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -805,47 +750,61 @@
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
-        // Modal y lógica de borrado
-        let deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
-        let deleteForm = document.getElementById('deleteForm');
-        let deleteError = document.getElementById('delete-error');
-        let deleteIdInput = document.getElementById('delete-complaint-id');
-
-        // Modal y lógica de cambio de estado
-        let statusModal = new bootstrap.Modal(document.getElementById('statusModal'));
-        let statusForm = document.getElementById('statusForm');
-        let statusError = document.getElementById('status-error');
-        let statusIdInput = document.getElementById('status-complaint-id');
-        let statusSelect = document.getElementById('complaint-status');
-
         // Modal y lógica de comentarios
         let commentsModal = new bootstrap.Modal(document.getElementById('commentsModal'));
         let commentForm = document.getElementById('commentForm');
         let commentError = document.getElementById('comment-error');
         let commentIdInput = document.getElementById('comment-complaint-id');
 
+        // Función para validar sesión del admin
+        async function validateAdminSession() {
+            try {
+                console.log('Validando sesión del admin...');
+                const response = await fetch('/auth/validate?username=admin');
+                console.log('Response status:', response.status);
+                const data = await response.json();
+                console.log('Response data:', data);
+                console.log('isActive:', data.data?.isActive);
+                const isActive = data.success && data.data?.isActive === true;
+                console.log('Resultado de validación:', isActive);
+                return isActive;
+            } catch (error) {
+                console.error('Error validando sesión:', error);
+                return false;
+            }
+        }
+
+        // Función para redirigir al login
+        function redirectToLogin(message) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Sesión inactiva',
+                text: message || 'Por favor, inicie sesión para continuar',
+                confirmButtonColor: '#2296c7',
+                confirmButtonText: 'Ir al Login'
+            }).then(() => {
+                window.location.href = '/login';
+            });
+        }
+
         document.addEventListener('click', function(e) {
             // Manejar click en botón de borrar
             if (e.target.closest('.delete-btn')) {
                 const btn = e.target.closest('.delete-btn');
-                deleteIdInput.value = btn.getAttribute('data-id');
-                deleteError.style.display = 'none';
-                deleteForm.reset();
-                deleteModal.show();
+                const complaintId = btn.getAttribute('data-id');
+                const entity = btn.getAttribute('data-entity');
+                
+                handleDeleteComplaint(complaintId, entity);
             }
 
             // Manejar click en botón de cambiar estado
             if (e.target.closest('.change-status-btn')) {
                 const btn = e.target.closest('.change-status-btn');
-                statusIdInput.value = btn.getAttribute('data-id');
+                const complaintId = btn.getAttribute('data-id');
+                const entity = btn.getAttribute('data-entity');
                 const currentStatus = btn.getAttribute('data-current-status');
                 
-                // Limpiar selección anterior
-                statusSelect.value = '';
-                statusError.style.display = 'none';
-                document.getElementById('status-password').value = '';
-                
-                statusModal.show();
+                handleChangeStatus(complaintId, entity, currentStatus);
             }
 
             // Manejar click en botón de ver comentarios
@@ -854,94 +813,164 @@
                 const complaintId = btn.getAttribute('data-id');
                 const entity = btn.getAttribute('data-entity');
                 
-                // Configurar el modal
                 commentIdInput.value = complaintId;
                 document.getElementById('modal-entity').textContent = entity;
                 commentError.style.display = 'none';
                 commentForm.reset();
-                commentIdInput.value = complaintId; // Restaurar después del reset
+                commentIdInput.value = complaintId;
                 
-                // Cargar detalles de la queja y comentarios
                 loadComplaintDetails(complaintId);
                 commentsModal.show();
             }
         });
 
-        deleteForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const id = deleteIdInput.value;
-            const password = document.getElementById('delete-password').value;
-            fetch('/complaints/delete', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id_complaint: id, password })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    deleteModal.hide();
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Queja borrada',
-                        text: 'La queja fue eliminada correctamente',
-                        confirmButtonColor: '#2296c7'
-                    }).then(() => {
-                        location.reload();
-                    });
-                } else {
-                    deleteError.textContent = data.message || 'Contraseña incorrecta';
-                    deleteError.style.display = 'block';
-                }
-            })
-            .catch(() => {
-                deleteError.textContent = 'Error al borrar la queja';
-                deleteError.style.display = 'block';
-            });
-        });
-
-        statusForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const id = statusIdInput.value;
-            const newStatus = statusSelect.value;
-            const password = document.getElementById('status-password').value;
+        // Función para manejar eliminación de queja
+        async function handleDeleteComplaint(complaintId, entity) {
+            // Validar sesión primero
+            const isSessionActive = await validateAdminSession();
             
-            fetch('/complaints/update-status', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    id_complaint: id, 
-                    complaint_status: newStatus, 
-                    password 
-                })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    statusModal.hide();
-                    let statusText = '';
-                    switch(newStatus) {
-                        case 'abierta': statusText = 'Abierta'; break;
-                        case 'en_revision': statusText = 'En Revisión'; break;
-                        case 'cerrada': statusText = 'Cerrada'; break;
+            if (!isSessionActive) {
+                redirectToLogin('Debe iniciar sesión como administrador para eliminar quejas');
+                return;
+            }
+
+            // Si la sesión está activa, pedir confirmación
+            Swal.fire({
+                title: '¿Está seguro?',
+                text: `¿Desea eliminar la queja de ${entity}?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const response = await fetch('/complaints/delete', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ id_complaint: complaintId })
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (data.redirectToLogin) {
+                            redirectToLogin(data.message);
+                            return;
+                        }
+                        
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Queja eliminada',
+                                text: 'La queja fue eliminada correctamente',
+                                confirmButtonColor: '#2296c7'
+                            }).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: data.message || 'Error al eliminar la queja',
+                                confirmButtonColor: '#2296c7'
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Error al eliminar la queja. Intente nuevamente.',
+                            confirmButtonColor: '#2296c7'
+                        });
                     }
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Estado actualizado',
-                        text: `El estado de la queja se cambió a: ${statusText}`,
-                        confirmButtonColor: '#2296c7'
-                    }).then(() => {
-                        location.reload();
-                    });
-                } else {
-                    statusError.textContent = data.message || 'Error al cambiar el estado';
-                    statusError.style.display = 'block';
                 }
-            })
-            .catch(() => {
-                statusError.textContent = 'Error al cambiar el estado de la queja';
-                statusError.style.display = 'block';
             });
-        });
+        }
+
+        // Función para manejar cambio de estado
+        async function handleChangeStatus(complaintId, entity, currentStatus) {
+            // Validar sesión primero
+            const isSessionActive = await validateAdminSession();
+            
+            if (!isSessionActive) {
+                redirectToLogin('Debe iniciar sesión como administrador para cambiar el estado de quejas');
+                return;
+            }
+
+            // Si la sesión está activa, pedir nuevo estado
+            const statusOptions = {
+                'abierta': 'Abierta',
+                'en_revision': 'En Revisión',
+                'cerrada': 'Cerrada'
+            };
+
+            const { value: newStatus } = await Swal.fire({
+                title: 'Cambiar Estado',
+                text: `Queja de ${entity}`,
+                input: 'select',
+                inputOptions: statusOptions,
+                inputPlaceholder: 'Seleccione el nuevo estado',
+                showCancelButton: true,
+                confirmButtonColor: '#2296c7',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Cambiar',
+                cancelButtonText: 'Cancelar',
+                inputValidator: (value) => {
+                    if (!value) {
+                        return 'Debe seleccionar un estado';
+                    }
+                }
+            });
+
+            if (newStatus) {
+                try {
+                    const response = await fetch('/complaints/update-status', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            id_complaint: complaintId, 
+                            complaint_status: newStatus
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.redirectToLogin) {
+                        redirectToLogin(data.message);
+                        return;
+                    }
+                    
+                    if (data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Estado actualizado',
+                            text: `El estado se cambió a: ${statusOptions[newStatus]}`,
+                            confirmButtonColor: '#2296c7'
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data.message || 'Error al cambiar el estado',
+                            confirmButtonColor: '#2296c7'
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error al cambiar el estado. Intente nuevamente.',
+                        confirmButtonColor: '#2296c7'
+                    });
+                }
+            }
+        }
 
         // --- CAPTCHA LOCALSTORAGE ---
         const CAPTCHA_KEY = 'captcha_token';

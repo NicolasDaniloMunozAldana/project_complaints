@@ -87,9 +87,26 @@ exports.fileComplaint = async (req, res) => {
  */
 exports.deleteComplaint = async (req, res) => {
     try {
-        const { id_complaint, password } = req.body;
+        console.log('=== DELETE COMPLAINT - REQUEST BODY ===');
+        console.log('Body completo:', req.body);
+        console.log('id_complaint:', req.body.id_complaint);
+        console.log('password (should be undefined):', req.body.password);
         
-        const result = await complaintsService.deleteComplaint(id_complaint, password);
+        const { id_complaint } = req.body;
+        
+        const result = await complaintsService.deleteComplaint(id_complaint);
+        
+        console.log('=== DELETE COMPLAINT - RESULT ===');
+        console.log('Result:', result);
+        
+        if (result.statusCode === 401) {
+            // Sesión inactiva, redirigir al login
+            return res.status(401).json({
+                success: false,
+                message: result.message,
+                redirectToLogin: true
+            });
+        }
         
         res.status(result.statusCode).json({
             success: result.success,
@@ -133,10 +150,19 @@ exports.complaintsStats = async (req, res) => {
  * Actualizar el estado de una queja
  */
 exports.updateComplaintStatus = async (req, res) => {
-    try {
-        const { id_complaint, complaint_status, password } = req.body;
+    try {        
+        const { id_complaint, complaint_status } = req.body;
         
-        const result = await complaintsService.updateComplaintStatus(id_complaint, complaint_status, password);
+        const result = await complaintsService.updateComplaintStatus(id_complaint, complaint_status);
+                
+        if (result.statusCode === 401) {
+            // Sesión inactiva, redirigir al login
+            return res.status(401).json({
+                success: false,
+                message: result.message,
+                redirectToLogin: true
+            });
+        }
         
         res.status(result.statusCode).json({
             success: result.success,

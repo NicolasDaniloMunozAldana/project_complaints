@@ -2,6 +2,7 @@ const complaintsRepository = require('../repositories/complaintsRepository');
 const entitiesRepository = require('../repositories/entitiesRepository');
 const commentsRepository = require('../repositories/commentsRepository');
 const complaintsValidator = require('../validators/complaintsValidator');
+const authService = require('./authService');
 
 class ComplaintsService {
     /**
@@ -84,10 +85,9 @@ class ComplaintsService {
     /**
      * Eliminar una queja (soft delete)
      * @param {string|number} id_complaint - ID de la queja
-     * @param {string} password - Contraseña de administrador
      * @returns {Promise<Object>} Resultado de la operación
      */
-    async deleteComplaint(id_complaint, password) {
+    async deleteComplaint(id_complaint) {
         try {
             // Validar ID de queja
             const idValidation = complaintsValidator.validateComplaintId(id_complaint);
@@ -99,13 +99,13 @@ class ComplaintsService {
                 };
             }
 
-            // Validar contraseña
-            const passwordValidation = complaintsValidator.validateAdminPassword(password);
-            if (!passwordValidation.isValid) {
+            // Validar sesión activa del admin
+            const sessionValidation = await authService.validateSession('admin');
+            if (!sessionValidation.success || !sessionValidation.data?.isActive) {
                 return {
                     success: false,
-                    message: passwordValidation.message,
-                    statusCode: passwordValidation.statusCode
+                    message: 'Sesión inactiva. Por favor, inicie sesión nuevamente.',
+                    statusCode: 401
                 };
             }
 
@@ -139,10 +139,9 @@ class ComplaintsService {
      * Actualizar el estado de una queja
      * @param {string|number} id_complaint - ID de la queja
      * @param {string} complaint_status - Nuevo estado
-     * @param {string} password - Contraseña de administrador
      * @returns {Promise<Object>} Resultado de la operación
      */
-    async updateComplaintStatus(id_complaint, complaint_status, password) {
+    async updateComplaintStatus(id_complaint, complaint_status) {
         try {
             // Validar ID de queja
             const idValidation = complaintsValidator.validateComplaintId(id_complaint);
@@ -164,13 +163,13 @@ class ComplaintsService {
                 };
             }
 
-            // Validar contraseña
-            const passwordValidation = complaintsValidator.validateAdminPassword(password);
-            if (!passwordValidation.isValid) {
+            // Validar sesión activa del admin
+            const sessionValidation = await authService.validateSession('admin');
+            if (!sessionValidation.success || !sessionValidation.data?.isActive) {
                 return {
                     success: false,
-                    message: passwordValidation.message,
-                    statusCode: passwordValidation.statusCode
+                    message: 'Sesión inactiva. Por favor, inicie sesión nuevamente.',
+                    statusCode: 401
                 };
             }
 
