@@ -23,10 +23,12 @@ app.use(emailNotifications);
 const homeRoutes = require('./routes/homeRoutes');
 const complaintsRoutes = require('./routes/complaintsRoutes');
 const authRoutes = require('./routes/authRoutes');
+const loginRoutes = require('./routes/loginRoutes');
 
 app.use('/', homeRoutes);
 app.use('/complaints', complaintsRoutes);
 app.use('/auth', authRoutes);
+app.use('/', loginRoutes);
 
 
 // Importar constantes
