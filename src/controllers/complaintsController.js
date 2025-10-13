@@ -87,17 +87,9 @@ exports.fileComplaint = async (req, res) => {
  */
 exports.deleteComplaint = async (req, res) => {
     try {
-        console.log('=== DELETE COMPLAINT - REQUEST BODY ===');
-        console.log('Body completo:', req.body);
-        console.log('id_complaint:', req.body.id_complaint);
-        console.log('password (should be undefined):', req.body.password);
-        
         const { id_complaint } = req.body;
         
         const result = await complaintsService.deleteComplaint(id_complaint);
-        
-        console.log('=== DELETE COMPLAINT - RESULT ===');
-        console.log('Result:', result);
         
         if (result.statusCode === 401) {
             // Sesión inactiva, redirigir al login
