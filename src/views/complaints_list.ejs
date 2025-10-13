@@ -759,15 +759,9 @@
         // Función para validar sesión del admin
         async function validateAdminSession() {
             try {
-                console.log('Validando sesión del admin...');
                 const response = await fetch('/auth/validate?username=admin');
-                console.log('Response status:', response.status);
                 const data = await response.json();
-                console.log('Response data:', data);
-                console.log('isActive:', data.data?.isActive);
-                const isActive = data.success && data.data?.isActive === true;
-                console.log('Resultado de validación:', isActive);
-                return isActive;
+                return data.success && data.data?.isActive === true;
             } catch (error) {
                 console.error('Error validando sesión:', error);
                 return false;
@@ -781,9 +775,19 @@
                 title: 'Sesión inactiva',
                 text: message || 'Por favor, inicie sesión para continuar',
                 confirmButtonColor: '#2296c7',
-                confirmButtonText: 'Ir al Login'
-            }).then(() => {
-                window.location.href = '/login';
+                confirmButtonText: 'Ir al Login',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                showCancelButton: true,
+                cancelButtonText: 'Cancelar',
+                cancelButtonColor: '#6c757d'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Guardar la URL actual antes de redirigir
+                    localStorage.setItem('redirectAfterLogin', window.location.pathname);
+                    window.location.href = '/login';
+                }
+                // Si cancela, no hace nada y permanece en la página
             });
         }
 
