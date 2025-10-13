@@ -33,3 +33,36 @@ exports.login = async (username, password) => {
         };
     }
 };
+
+/**
+ * Valida si un usuario tiene sesión activa
+ */
+exports.validateSession = async (username) => {
+    try {
+        const response = await axios.get(
+            `${AUTH_SERVICE_URL}/api/auth/validate`,
+            { params: { username } }
+        );
+
+        return {
+            success: true,
+            statusCode: response.status,
+            data: response.data.data,
+            message: response.data.message
+        };
+    } catch (error) {
+        if (error.response) {
+            return {
+                success: false,
+                statusCode: error.response.status,
+                message: error.response.data?.message || 'Error al validar sesión'
+            };
+        }
+        
+        return {
+            success: false,
+            statusCode: 503,
+            message: 'Servicio de autenticación no disponible'
+        };
+    }
+};
