@@ -74,6 +74,9 @@
         const data = await response.json();
         
         if (data.success) {
+          // Guardar username en localStorage
+          localStorage.setItem('username', username);
+          
           Swal.fire({
             icon: 'success',
             title: 'Inicio de sesión exitoso',

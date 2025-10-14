@@ -67,3 +67,36 @@ exports.validateSession = async (req, res) => {
         });
     }
 };
+
+exports.logout = async (req, res) => {
+    try {
+        const { username } = req.body;
+
+        if (!username) {
+            return res.status(400).json({
+                success: false,
+                message: 'El username es requerido'
+            });
+        }
+
+        const result = await authService.logout(username);
+        
+        if (result.success) {
+            res.status(result.statusCode).json({
+                success: true,
+                message: result.message
+            });
+        } else {
+            res.status(result.statusCode).json({
+                success: false,
+                message: result.message
+            });
+        }
+    } catch (error) {
+        console.error('Error in logout controller:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor'
+        });
+    }
+};
