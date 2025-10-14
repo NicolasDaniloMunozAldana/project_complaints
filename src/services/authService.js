@@ -66,3 +66,36 @@ exports.validateSession = async (username) => {
         };
     }
 };
+
+/**
+ * Cierra la sesión de un usuario
+ */
+exports.logout = async (username) => {
+    try {
+        const response = await axios.post(
+            `${AUTH_SERVICE_URL}/api/auth/logout`,
+            { username }
+        );
+
+        return {
+            success: true,
+            statusCode: response.status,
+            data: response.data,
+            message: 'Sesión cerrada exitosamente'
+        };
+    } catch (error) {
+        if (error.response) {
+            return {
+                success: false,
+                statusCode: error.response.status,
+                message: error.response.data?.message || 'Error al cerrar sesión'
+            };
+        }
+        
+        return {
+            success: false,
+            statusCode: 503,
+            message: 'Servicio de autenticación no disponible'
+        };
+    }
+};
