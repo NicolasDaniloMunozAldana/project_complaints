@@ -569,6 +569,12 @@
                 <span class="d-none d-sm-inline">Volver al inicio</span>
                 <span class="d-inline d-sm-none">Inicio</span>
             </a>
+            <div id="logoutSection" class="d-none align-items-center">
+                <span class="me-3 text-muted fw-semibold" id="usernameDisplay"></span>
+                <button id="logoutBtn" class="btn btn-outline-danger btn-sm">
+                    <i class="bi bi-box-arrow-right"></i> Cerrar sesión
+                </button>
+            </div>
         </div>
     </nav>
 
@@ -1169,6 +1175,61 @@
 
         window.addEventListener('resize', adjustRecaptcha);
         window.addEventListener('load', adjustRecaptcha);
+
+        // Manejar logout
+        document.addEventListener('DOMContentLoaded', function() {
+            const username = localStorage.getItem('username');
+            const logoutSection = document.getElementById('logoutSection');
+            const usernameDisplay = document.getElementById('usernameDisplay');
+            const logoutBtn = document.getElementById('logoutBtn');
+
+            if (username) {
+                usernameDisplay.textContent = `Usuario: ${username}`;
+                logoutSection.classList.remove('d-none');
+                logoutSection.classList.add('d-flex');
+            }
+
+            logoutBtn?.addEventListener('click', async function() {
+                try {
+                    const response = await fetch('/auth/logout', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        localStorage.removeItem('username');
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Sesión cerrada',
+                            text: data.message,
+                            confirmButtonColor: '#2296c7',
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data.message,
+                            confirmButtonColor: '#2296c7'
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error al cerrar sesión',
+                        confirmButtonColor: '#2296c7'
+                    });
+                }
+            });
+        });
     </script>
 </body>
 
