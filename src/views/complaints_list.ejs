@@ -559,7 +559,7 @@
 
 <body>
     <nav class="navbar navbar-light bg-white shadow-sm mb-3">
-        <div class="container-fluid">
+        <div class="container-fluid d-flex justify-content-between">
             <a href="/" class="btn custom_button d-flex align-items-center">
                 <svg xmlns="http://www.w3.org/2000/svg" height="35" viewBox="0 0 24 24" width="35" fill="#fff"
                     class="me-2">
@@ -569,6 +569,12 @@
                 <span class="d-none d-sm-inline">Volver al inicio</span>
                 <span class="d-inline d-sm-none">Inicio</span>
             </a>
+            <div id="userSection" style="display: none;">
+                <span class="me-2 text-muted d-none d-sm-inline">Bienvenido, <strong id="username"></strong></span>
+                <button id="logoutBtn" class="btn btn-outline-danger btn-sm">
+                    <i class="bi bi-box-arrow-right"></i> <span class="d-none d-sm-inline">Cerrar sesión</span>
+                </button>
+            </div>
         </div>
     </nav>
 
@@ -1156,7 +1162,63 @@
             if (isCaptchaValid()) {
                 showComplaintsList();
             }
+            
+            // Verificar si hay usuario logueado
+            const loggedUser = localStorage.getItem('loggedUser');
+            if (loggedUser) {
+                document.getElementById('username').textContent = loggedUser;
+                document.getElementById('userSection').style.display = 'flex';
+            }
         });
+
+        // Manejar logout
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', async function() {
+                const loggedUser = localStorage.getItem('loggedUser');
+                
+                if (!loggedUser) return;
+                
+                try {
+                    const response = await fetch('/auth/logout', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username: loggedUser })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        localStorage.removeItem('loggedUser');
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Sesión cerrada',
+                            text: data.message,
+                            confirmButtonColor: '#2296c7',
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data.message,
+                            confirmButtonColor: '#2296c7'
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error al cerrar sesión',
+                        confirmButtonColor: '#2296c7'
+                    });
+                }
+            });
+        }
 
         // Ajustar el reCAPTCHA al tamaño de pantalla
         function adjustRecaptcha() {
