@@ -2,7 +2,7 @@
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('PUBLIC_ENTITYS', {
+    await queryInterface.createTable('PUBLIC_ENTITIES', {
       id_public_entity: {
         type: Sequelize.INTEGER,
         primaryKey: true,
@@ -25,7 +25,7 @@ module.exports = {
       }
     });
 
-    await queryInterface.bulkInsert('PUBLIC_ENTITYS', [
+    await queryInterface.bulkInsert('PUBLIC_ENTITIES', [
       { id_public_entity: 1, name: 'Gobernación de Boyacá' },
       { id_public_entity: 2, name: 'Secretaría de Salud de Boyacá' },
       { id_public_entity: 3, name: 'INDEPORTES Boyacá' },
@@ -34,6 +34,6 @@ module.exports = {
     ]);
   },
   down: async (queryInterface) => {
-    await queryInterface.dropTable('PUBLIC_ENTITYS');
+    await queryInterface.dropTable('PUBLIC_ENTITIES');
   }
 };

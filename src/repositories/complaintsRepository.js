@@ -87,7 +87,7 @@ class ComplaintsRepository {
         const [results] = await Complaint.sequelize.query(`
             SELECT p.name as public_entity, COUNT(c.id_complaint) as total_complaints
             FROM COMPLAINTS c
-            JOIN PUBLIC_ENTITYS p ON c.id_public_entity = p.id_public_entity
+            JOIN PUBLIC_ENTITIES p ON c.id_public_entity = p.id_public_entity
             WHERE c.status = 1
             GROUP BY p.id_public_entity, p.name
             ORDER BY total_complaints DESC
