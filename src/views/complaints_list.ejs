@@ -601,6 +601,13 @@
 
         <div class="container px-0" id="complaints-container" style="display:none;">
             <% if (complaints.length> 0) { %>
+                <div class="mb-3 d-flex align-items-center gap-2">
+                    <label for="entityFilter" class="form-label mb-0 fw-bold" style="color: #10B981;">Filtrar por Entidad:</label>
+                    <select id="entityFilter" class="form-select" style="max-width: 300px; border-color: #10B981;">
+                        <option value="">Todas las entidades</option>
+                    </select>
+                </div>
+                
                 <div class="table-responsive">
                     <table class="table custom_table table-striped mt-3 mb-4">
                         <thead>
@@ -1000,16 +1007,59 @@
             document.querySelector('.captcha-container').style.display = 'none';
             document.getElementById('complaints-container').style.display = 'block';
             if ($('.custom_table').length && !$.fn.DataTable.isDataTable('.custom_table')) {
-                $('.custom_table').DataTable({
+                const table = $('.custom_table').DataTable({
                     paging: true,
                     pageLength: 5,
                     lengthChange: false,
-                    searching: false,
+                    searching: true,
                     info: false,
                     ordering: false,
-                    responsive: true
+                    responsive: true,
+                    dom: 'rtip'
+                });
+                
+                // Poblar el filtro de entidades
+                populateEntityFilter(table);
+                
+                // Agregar evento de filtrado
+                $('#entityFilter').on('change', function() {
+                    const selectedEntity = $(this).val();
+                    if (selectedEntity === '') {
+                        // Mostrar todas las entidades
+                        table.search('').columns().search('').draw();
+                    } else {
+                        // Filtrar por la entidad exacta seleccionada usando expresión regular
+                        table.column(0).search('^' + selectedEntity + '$', true, false).draw();
+                    }
                 });
             }
+        }
+
+        function populateEntityFilter(table) {
+            const entities = new Set();
+            
+            // Obtener todas las entidades directamente del tbody
+            $('.custom_table tbody tr').each(function() {
+                const entityText = $(this).find('td').first().text().trim();
+                if (entityText) {
+                    entities.add(entityText);
+                }
+            });
+            
+            // Ordenar entidades alfabéticamente
+            const sortedEntities = Array.from(entities).sort();
+            const select = $('#entityFilter');
+            
+            // Limpiar opciones existentes excepto la primera
+            select.find('option:not(:first)').remove();
+            
+            // Agregar cada entidad como opción
+            sortedEntities.forEach(function(entity) {
+                select.append($('<option>', {
+                    value: entity,
+                    text: entity
+                }));
+            });
         }
         // Función para cargar detalles de la queja y comentarios
         function loadComplaintDetails(complaintId) {
