@@ -10,7 +10,7 @@ Entity.init({
 }, {
   sequelize,
   modelName: 'Entity',
-  tableName: 'PUBLIC_ENTITYS',
+  tableName: 'PUBLIC_ENTITIES',
   timestamps: false
 });
 
