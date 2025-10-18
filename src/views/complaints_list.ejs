@@ -762,10 +762,13 @@
         let commentError = document.getElementById('comment-error');
         let commentIdInput = document.getElementById('comment-complaint-id');
 
-        // Función para validar sesión del admin
-        async function validateAdminSession() {
+        // Función para validar sesión del usuario
+        async function validateUserSession() {
             try {
-                const response = await fetch('/auth/validate?username=admin');
+                const username = localStorage.getItem('username');
+                if (!username) return false;
+                
+                const response = await fetch(`/auth/validate?username=${username}`);
                 const data = await response.json();
                 return data.success && data.data?.isActive === true;
             } catch (error) {
@@ -837,10 +840,10 @@
         // Función para manejar eliminación de queja
         async function handleDeleteComplaint(complaintId, entity) {
             // Validar sesión primero
-            const isSessionActive = await validateAdminSession();
+            const isSessionActive = await validateUserSession();
             
             if (!isSessionActive) {
-                redirectToLogin('Debe iniciar sesión como administrador para eliminar quejas');
+                redirectToLogin('Debe iniciar sesión para eliminar quejas');
                 return;
             }
 
@@ -857,10 +860,20 @@
             }).then(async (result) => {
                 if (result.isConfirmed) {
                     try {
+                        const username = localStorage.getItem('username');
+                        console.log('Username para delete:', username);
+                        if (!username) {
+                            console.error('No se encontró username en localStorage para delete');
+                            throw new Error('No hay sesión activa');
+                        }
+                        
                         const response = await fetch('/complaints/delete', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ id_complaint: complaintId })
+                            body: JSON.stringify({ 
+                                id_complaint: complaintId,
+                                username: username
+                            })
                         });
                         
                         const data = await response.json();
@@ -903,10 +916,10 @@
         // Función para manejar cambio de estado
         async function handleChangeStatus(complaintId, entity, currentStatus) {
             // Validar sesión primero
-            const isSessionActive = await validateAdminSession();
+            const isSessionActive = await validateUserSession();
             
             if (!isSessionActive) {
-                redirectToLogin('Debe iniciar sesión como administrador para cambiar el estado de quejas');
+                redirectToLogin('Debe iniciar sesión para cambiar el estado de quejas');
                 return;
             }
 
@@ -937,12 +950,20 @@
 
             if (newStatus) {
                 try {
+                    const username = localStorage.getItem('username');
+                    console.log('Username para update:', username);
+                    if (!username) {
+                        console.error('No se encontró username en localStorage para update');
+                        throw new Error('No hay sesión activa');
+                    }
+                    
                     const response = await fetch('/complaints/update-status', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ 
                             id_complaint: complaintId, 
-                            complaint_status: newStatus
+                            complaint_status: newStatus,
+                            username: username
                         })
                     });
                     
