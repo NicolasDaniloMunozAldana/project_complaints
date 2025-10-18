@@ -87,9 +87,9 @@ exports.fileComplaint = async (req, res) => {
  */
 exports.deleteComplaint = async (req, res) => {
     try {
-        const { id_complaint } = req.body;
+        const { id_complaint, username} = req.body;
         
-        const result = await complaintsService.deleteComplaint(id_complaint);
+        const result = await complaintsService.deleteComplaint(id_complaint, username);
         
         if (result.statusCode === 401) {
             // Sesión inactiva, redirigir al login
@@ -143,9 +143,10 @@ exports.complaintsStats = async (req, res) => {
  */
 exports.updateComplaintStatus = async (req, res) => {
     try {        
-        const { id_complaint, complaint_status } = req.body;
-        
-        const result = await complaintsService.updateComplaintStatus(id_complaint, complaint_status);
+        const { id_complaint, complaint_status, username} = req.body;
+                
+
+        const result = await complaintsService.updateComplaintStatus(id_complaint, complaint_status, username);
                 
         if (result.statusCode === 401) {
             // Sesión inactiva, redirigir al login

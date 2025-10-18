@@ -85,9 +85,10 @@ class ComplaintsService {
     /**
      * Eliminar una queja (soft delete)
      * @param {string|number} id_complaint - ID de la queja
+     * @param {string} username - Nombre del usuario que realiza la acción
      * @returns {Promise<Object>} Resultado de la operación
      */
-    async deleteComplaint(id_complaint) {
+    async deleteComplaint(id_complaint, username) {
         try {
             // Validar ID de queja
             const idValidation = complaintsValidator.validateComplaintId(id_complaint);
@@ -97,10 +98,18 @@ class ComplaintsService {
                     message: idValidation.message,
                     statusCode: idValidation.statusCode
                 };
+            }   
+
+            if (!username) {
+                return {
+                    success: false,
+                    message: 'Se requiere un usuario con sesión activa para realizar esta acción',
+                    statusCode: 400
+                };
             }
 
-            // Validar sesión activa del admin
-            const sessionValidation = await authService.validateSession('admin');
+            // Validar sesión activa del usuario
+            const sessionValidation = await authService.validateSession(username);
             if (!sessionValidation.success || !sessionValidation.data?.isActive) {
                 return {
                     success: false,
@@ -139,9 +148,10 @@ class ComplaintsService {
      * Actualizar el estado de una queja
      * @param {string|number} id_complaint - ID de la queja
      * @param {string} complaint_status - Nuevo estado
+     * @param {string} username - Nombre del usuario que realiza la acción
      * @returns {Promise<Object>} Resultado de la operación
      */
-    async updateComplaintStatus(id_complaint, complaint_status) {
+    async updateComplaintStatus(id_complaint, complaint_status, username) {
         try {
             // Validar ID de queja
             const idValidation = complaintsValidator.validateComplaintId(id_complaint);
@@ -162,9 +172,17 @@ class ComplaintsService {
                     statusCode: statusValidation.statusCode
                 };
             }
+                        
+            if (!username) {
+                return {
+                    success: false,
+                    message: 'Se requiere un usuario para realizar esta acción',
+                    statusCode: 400
+                };
+            }
 
-            // Validar sesión activa del admin
-            const sessionValidation = await authService.validateSession('admin');
+            // Validar sesión activa del usuario
+            const sessionValidation = await authService.validateSession(username);
             if (!sessionValidation.success || !sessionValidation.data?.isActive) {
                 return {
                     success: false,
