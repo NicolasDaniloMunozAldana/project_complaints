@@ -19,7 +19,7 @@ User.init({
     allowNull: false 
   },
   session_status: { 
-    type: DataTypes.ENUM('active', 'inactive', 'expired'), 
+    type: DataTypes.ENUM('active', 'inactive'), 
     allowNull: false, 
     defaultValue: 'inactive' 
   },
