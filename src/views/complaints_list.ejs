@@ -569,11 +569,16 @@
                 <span class="d-none d-sm-inline">Volver al inicio</span>
                 <span class="d-inline d-sm-none">Inicio</span>
             </a>
-            <div id="logoutSection" class="d-none align-items-center">
-                <span class="me-3 text-muted fw-semibold" id="usernameDisplay"></span>
-                <button id="logoutBtn" class="btn btn-outline-danger btn-sm">
-                    <i class="bi bi-box-arrow-right"></i> Cerrar sesión
-                </button>
+            <div id="authSection" class="d-flex align-items-center">
+                <a href="/login" id="loginBtn" class="btn btn-primary btn-sm d-none">
+                    <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
+                </a>
+                <div id="logoutSection" class="d-none align-items-center">
+                    <span class="me-3 text-muted fw-semibold" id="usernameDisplay"></span>
+                    <button id="logoutBtn" class="btn btn-outline-danger btn-sm">
+                        <i class="bi bi-box-arrow-right"></i> Cerrar sesión
+                    </button>
+                </div>
             </div>
         </div>
     </nav>
@@ -1247,10 +1252,11 @@
         window.addEventListener('resize', adjustRecaptcha);
         window.addEventListener('load', adjustRecaptcha);
 
-        // Manejar logout
+        // Manejar logout y login
         document.addEventListener('DOMContentLoaded', function() {
             const username = localStorage.getItem('username');
             const logoutSection = document.getElementById('logoutSection');
+            const loginBtn = document.getElementById('loginBtn');
             const usernameDisplay = document.getElementById('usernameDisplay');
             const logoutBtn = document.getElementById('logoutBtn');
 
@@ -1258,6 +1264,10 @@
                 usernameDisplay.textContent = `Usuario: ${username}`;
                 logoutSection.classList.remove('d-none');
                 logoutSection.classList.add('d-flex');
+                loginBtn.classList.add('d-none');
+            } else {
+                loginBtn.classList.remove('d-none');
+                logoutSection.classList.add('d-none');
             }
 
             logoutBtn?.addEventListener('click', async function() {
