@@ -66,8 +66,8 @@
 
 <body>
     <nav class="navbar navbar-light bg-white shadow-sm mb-4">
-        <div class="container d-flex justify-content-center">
-            <span class="navbar-brand mb-0 h1 text-center">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">
                 <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"
                     fill="#2664eb">
                     <path
@@ -75,6 +75,17 @@
                 </svg>
                 Quejas de Entidades Boyacá
             </span>
+            <div id="authSection" class="d-flex align-items-center">
+                <a href="/login" id="loginBtn" class="btn btn-primary btn-sm d-none">
+                    <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
+                </a>
+                <div id="logoutSection" class="d-none align-items-center">
+                    <span class="me-3 text-muted fw-semibold" id="usernameDisplay"></span>
+                    <button id="logoutBtn" class="btn btn-outline-danger btn-sm">
+                        <i class="bi bi-box-arrow-right"></i> Cerrar sesión
+                    </button>
+                </div>
+            </div>
         </div>
     </nav>
 
@@ -187,6 +198,60 @@
         });
     </script>
     <% } %>
+
+    <script>
+        // Manejar logout y login
+        document.addEventListener('DOMContentLoaded', function() {
+            const username = localStorage.getItem('username');
+            const logoutSection = document.getElementById('logoutSection');
+            const loginBtn = document.getElementById('loginBtn');
+            const usernameDisplay = document.getElementById('usernameDisplay');
+            const logoutBtn = document.getElementById('logoutBtn');
+
+            if (username) {
+                usernameDisplay.textContent = `Usuario: ${username}`;
+                logoutSection.classList.remove('d-none');
+                logoutSection.classList.add('d-flex');
+                loginBtn.classList.add('d-none');
+            } else {
+                loginBtn.classList.remove('d-none');
+                logoutSection.classList.add('d-none');
+            }
+
+            logoutBtn?.addEventListener('click', async function() {
+                try {
+                    const response = await fetch('/auth/logout', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        localStorage.removeItem('username');
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Sesión cerrada',
+                            text: 'Has cerrado sesión correctamente',
+                            confirmButtonColor: '#2296c7'
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error al cerrar sesión:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error al cerrar sesión',
+                        confirmButtonColor: '#2296c7'
+                    });
+                }
+            });
+        });
+    </script>
 </body>
 
 </html>

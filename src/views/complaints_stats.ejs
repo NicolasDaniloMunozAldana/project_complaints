@@ -7,10 +7,12 @@
     <title>Estadísticas de Quejas</title>
     <link rel="stylesheet" href="/complaint_list_style.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
         /* ESTILOS PRINCIPALES (MANTENIDOS IGUAL) */
@@ -294,7 +296,7 @@
 
 <body>
     <nav class="navbar navbar-light bg-white shadow-sm mb-4" role="navigation" aria-label="Navegación principal">
-        <div class="container-fluid d-flex justify-content-start">
+        <div class="container-fluid d-flex justify-content-between">
             <a href="/" class="btn custom_button d-flex align-items-center" role="button" aria-label="Volver al inicio">
                 <svg xmlns="http://www.w3.org/2000/svg" height="35" viewBox="0 0 24 24" width="35" fill="#fff"
                     class="me-2" aria-hidden="true">
@@ -303,6 +305,17 @@
                 </svg>
                 Volver al inicio
             </a>
+            <div id="authSection" class="d-flex align-items-center">
+                <a href="/login" id="loginBtn" class="btn btn-primary btn-sm d-none" role="button">
+                    <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
+                </a>
+                <div id="logoutSection" class="d-none align-items-center">
+                    <span class="me-3 text-muted fw-semibold" id="usernameDisplay"></span>
+                    <button id="logoutBtn" class="btn btn-outline-danger btn-sm">
+                        <i class="bi bi-box-arrow-right"></i> Cerrar sesión
+                    </button>
+                </div>
+            </div>
         </div>
     </nav>
 
@@ -501,6 +514,58 @@
             if (table) {
                 handleWindowResize(table);
             }
+        });
+
+        // Manejar logout y login
+        document.addEventListener('DOMContentLoaded', function() {
+            const username = localStorage.getItem('username');
+            const logoutSection = document.getElementById('logoutSection');
+            const loginBtn = document.getElementById('loginBtn');
+            const usernameDisplay = document.getElementById('usernameDisplay');
+            const logoutBtn = document.getElementById('logoutBtn');
+
+            if (username) {
+                usernameDisplay.textContent = `Usuario: ${username}`;
+                logoutSection.classList.remove('d-none');
+                logoutSection.classList.add('d-flex');
+                loginBtn.classList.add('d-none');
+            } else {
+                loginBtn.classList.remove('d-none');
+                logoutSection.classList.add('d-none');
+            }
+
+            logoutBtn?.addEventListener('click', async function() {
+                try {
+                    const response = await fetch('/auth/logout', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        localStorage.removeItem('username');
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Sesión cerrada',
+                            text: 'Has cerrado sesión correctamente',
+                            confirmButtonColor: '#2296c7'
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error al cerrar sesión:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error al cerrar sesión',
+                        confirmButtonColor: '#2296c7'
+                    });
+                }
+            });
         });
     </script>
 </body>
