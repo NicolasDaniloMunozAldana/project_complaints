@@ -584,17 +584,39 @@
     </nav>
 
     <div class="container text-center px-3">
-        <div class="icon-bg icon-blue mb-2" style="background:#10B981;">
-            <svg xmlns="http://www.w3.org/2000/svg" height="40" viewBox="0 0 24 24" width="40" fill="#fff">
-                <path d="M0 0h24v24H0z" fill="none" />
-                <path
-                    d="M19 5v14H5V5h14m1.1-2H3.9c-.5 0-.9.4-.9.9v16.2c0 .4.4.9.9.9h16.2c.4 0 .9-.5.9-.9V3.9c0-.5-.5-.9-.9-.9zM11 7h6v2h-6V7zm0 4h6v2h-6v-2zm0 4h6v2h-6zM7 7h2v2H7zm0 4h2v2H7zm0 4h2v2H7z" />
-            </svg>
+        <!-- Mensaje cuando no hay sesión activa -->
+        <div id="no-session-container" style="display:none;">
+            <div class="icon-bg icon-blue mb-2" style="background:#dc3545;">
+                <svg xmlns="http://www.w3.org/2000/svg" height="40" viewBox="0 0 24 24" width="40" fill="#fff">
+                    <path d="M0 0h24v24H0z" fill="none"/>
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                </svg>
+            </div>
+            <h1 class="title">Sesión Requerida</h1>
+            <p class="subtitle">Debes iniciar sesión para consultar las quejas</p>
+            <div class="d-flex justify-content-center gap-3 mt-4">
+                <a href="/login" class="btn btn-primary btn-lg">
+                    <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
+                </a>
+                <a href="/" class="btn btn-outline-secondary btn-lg">
+                    <i class="bi bi-house-door"></i> Volver al Inicio
+                </a>
+            </div>
         </div>
-        <h1 class="title">Consultar Quejas</h1>
-        <p class="subtitle">Consultar las quejas realizadas y genera un reporte de todas ellas.</p>
 
-        <div class="captcha-container">
+        <!-- Contenido principal cuando hay sesión -->
+        <div id="main-content-container">
+            <div class="icon-bg icon-blue mb-2" style="background:#10B981;">
+                <svg xmlns="http://www.w3.org/2000/svg" height="40" viewBox="0 0 24 24" width="40" fill="#fff">
+                    <path d="M0 0h24v24H0z" fill="none" />
+                    <path
+                        d="M19 5v14H5V5h14m1.1-2H3.9c-.5 0-.9.4-.9.9v16.2c0 .4.4.9.9.9h16.2c.4 0 .9-.5.9-.9V3.9c0-.5-.5-.9-.9-.9zM11 7h6v2h-6V7zm0 4h6v2h-6v-2zm0 4h6v2h-6zM7 7h2v2H7zm0 4h2v2H7zm0 4h2v2H7z" />
+                </svg>
+            </div>
+            <h1 class="title">Consultar Quejas</h1>
+            <p class="subtitle">Consultar las quejas realizadas y genera un reporte de todas ellas.</p>
+
+            <div class="captcha-container">
             <div class="captcha-wrapper">
                 <p class="captcha-message mb-3">
                     Por favor, verifica que eres humano para ver la lista de quejas
@@ -706,6 +728,7 @@
                                 Generar Reporte
                             </a>
                         </div>
+            </div>
         </div>
     </div>
 
@@ -1252,8 +1275,53 @@
         window.addEventListener('resize', adjustRecaptcha);
         window.addEventListener('load', adjustRecaptcha);
 
+        // Función para verificar la sesión sin usar localStorage directamente
+        async function verifySession() {
+            const username = localStorage.getItem('username');
+            
+            if (!username) {
+                showNoSessionMessage();
+                return false;
+            }
+
+            try {
+                const response = await fetch(`/auth/validate?username=${encodeURIComponent(username)}`);
+                const data = await response.json();
+
+                if (data.success && data.data?.isActive === true) {
+                    showMainContent();
+                    return true;
+                } else {
+                    localStorage.removeItem('username');
+                    showNoSessionMessage();
+                    return false;
+                }
+            } catch (error) {
+                console.error('Error al verificar la sesión:', error);
+                showNoSessionMessage();
+                return false;
+            }
+        }
+
+        function showNoSessionMessage() {
+            document.getElementById('no-session-container').style.display = 'block';
+            document.getElementById('main-content-container').style.display = 'none';
+        }
+
+        function showMainContent() {
+            document.getElementById('no-session-container').style.display = 'none';
+            document.getElementById('main-content-container').style.display = 'block';
+        }
+
         // Manejar logout y login
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Verificar la sesión al cargar la página
+            const hasSession = await verifySession();
+            
+            if (!hasSession) {
+                return; // No continuar si no hay sesión
+            }
+
             const username = localStorage.getItem('username');
             const logoutSection = document.getElementById('logoutSection');
             const loginBtn = document.getElementById('loginBtn');
