@@ -145,7 +145,7 @@
 
         .custom_table {
             border-radius: 20px;
-            overflow: hidden;
+            overflow: visible !important;
             border: none;
             width: 100% !important;
         }
@@ -156,6 +156,116 @@
             font-size: 1rem;
             padding: 12px 15px !important;
             vertical-align: middle;
+            overflow: visible !important;
+        }
+        
+        /* Dropdown elegante */
+        .action-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-toggle-custom {
+            background-color: #6c757d;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 16px;
+            color: white;
+            font-weight: 500;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .dropdown-toggle-custom:hover {
+            background-color: #5a6268;
+        }
+
+        .dropdown-toggle-custom i {
+            font-size: 1.1rem;
+        }
+
+        .dropdown-menu-custom {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            min-width: 200px;
+            margin-top: 4px;
+            display: none;
+            z-index: 1000;
+            border: 1px solid #e2e8f0;
+        }
+
+        .dropdown-menu-custom.show {
+            display: block;
+        }
+
+        .dropdown-item-custom {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            color: #4a5568;
+            text-decoration: none;
+            cursor: pointer;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+
+        .dropdown-item-custom:first-child {
+            border-radius: 8px 8px 0 0;
+        }
+
+        .dropdown-item-custom:last-child {
+            border-radius: 0 0 8px 8px;
+        }
+
+        .dropdown-item-custom i {
+            font-size: 1.1rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        .dropdown-item-custom:hover {
+            background-color: #f7fafc;
+        }
+
+        .dropdown-item-custom.comments {
+            color: #339BBF;
+        }
+
+        .dropdown-item-custom.comments:hover {
+            background-color: #ebf8ff;
+        }
+
+        .dropdown-item-custom.status {
+            color: #10B981;
+        }
+
+        .dropdown-item-custom.status:hover {
+            background-color: #d1fae5;
+        }
+
+        .dropdown-item-custom.delete {
+            color: #e53e3e;
+        }
+
+        .dropdown-item-custom.delete:hover {
+            background-color: #fff5f5;
+        }
+
+        .dropdown-divider-custom {
+            height: 1px;
+            background-color: #e2e8f0;
+            margin: 4px 0;
         }
 
         .custom_th {
@@ -515,20 +625,47 @@
         }
 
         @media (max-width: 768px) {
-            .btn-group {
-                display: flex;
-                flex-direction: column;
-                gap: 5px;
+            .action-dropdown {
+                width: 100%;
             }
-            
-            .btn-group .btn {
-                margin: 0;
+
+            .dropdown-toggle-custom {
+                width: 100%;
+                justify-content: center;
                 font-size: 0.85rem;
+                padding: 10px 12px;
+            }
+
+            .dropdown-menu-custom {
+                left: 0;
+                right: 0;
+                min-width: 100%;
+            }
+
+            .dropdown-item-custom {
+                padding: 14px 16px;
+                font-size: 0.9rem;
             }
 
             .badge {
                 font-size: 0.8rem;
                 padding: 0.4rem 0.6rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .dropdown-toggle-custom {
+                font-size: 0.8rem;
+                padding: 8px 10px;
+            }
+
+            .dropdown-item-custom {
+                padding: 12px 14px;
+                font-size: 0.85rem;
+            }
+
+            .dropdown-item-custom i {
+                font-size: 1rem;
             }
         }
 
@@ -635,7 +772,7 @@
                     </select>
                 </div>
                 
-                <div class="table-responsive">
+                <div class="table-responsive" style="overflow-y: visible !important;">
                     <table class="table custom_table table-striped mt-3 mb-4">
                         <thead>
                             <tr>
@@ -695,23 +832,34 @@
                                         </span>
                                     </td>
                                     <td data-label="Acciones">
-                                        <div class="btn-group" role="group">
-                                            <button class="btn btn-info btn-sm view-comments-btn" 
-                                                    data-id="<%= c.id_complaint %>" 
-                                                    data-entity="<%= c.public_entity %>">
-                                                <i class="bi bi-chat-dots"></i> Comentarios
+                                        <div class="action-dropdown">
+                                            <button class="dropdown-toggle-custom" onclick="toggleDropdown(this)">
+                                                <i class="bi bi-three-dots-vertical"></i>
+                                                <span>Acciones</span>
                                             </button>
-                                            <button class="btn btn-primary btn-sm change-status-btn" 
-                                                    data-id="<%= c.id_complaint %>" 
-                                                    data-entity="<%= c.public_entity %>"
-                                                    data-current-status="<%= c.complaint_status %>">
-                                                <i class="bi bi-arrow-repeat"></i> Cambiar Estado
-                                            </button>
-                                            <button class="btn btn-danger btn-sm delete-btn" 
-                                                    data-id="<%= c.id_complaint %>" 
-                                                    data-entity="<%= c.public_entity %>">
-                                                <i class="bi bi-trash"></i> Borrar
-                                            </button>
+                                            <div class="dropdown-menu-custom">
+                                                <button class="dropdown-item-custom comments view-comments-btn" 
+                                                        data-id="<%= c.id_complaint %>" 
+                                                        data-entity="<%= c.public_entity %>">
+                                                    <i class="bi bi-chat-dots-fill"></i>
+                                                    <span>Ver Comentarios</span>
+                                                </button>
+                                                <div class="dropdown-divider-custom"></div>
+                                                <button class="dropdown-item-custom status change-status-btn" 
+                                                        data-id="<%= c.id_complaint %>" 
+                                                        data-entity="<%= c.public_entity %>"
+                                                        data-current-status="<%= c.complaint_status %>">
+                                                    <i class="bi bi-arrow-repeat"></i>
+                                                    <span>Cambiar Estado</span>
+                                                </button>
+                                                <div class="dropdown-divider-custom"></div>
+                                                <button class="dropdown-item-custom delete delete-btn" 
+                                                        data-id="<%= c.id_complaint %>" 
+                                                        data-entity="<%= c.public_entity %>">
+                                                    <i class="bi bi-trash-fill"></i>
+                                                    <span>Eliminar Queja</span>
+                                                </button>
+                                            </div>
                                         </div>
                                     </td>
                                 </tr>
@@ -791,6 +939,40 @@
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
+        // Función para manejar el dropdown
+        function toggleDropdown(button) {
+            const dropdown = button.nextElementSibling;
+            const isOpen = dropdown.classList.contains('show');
+            
+            // Cerrar todos los dropdowns abiertos
+            document.querySelectorAll('.dropdown-menu-custom.show').forEach(menu => {
+                menu.classList.remove('show');
+            });
+            
+            // Si no estaba abierto, abrirlo
+            if (!isOpen) {
+                dropdown.classList.add('show');
+            }
+        }
+
+        // Cerrar dropdown al hacer click fuera
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.action-dropdown')) {
+                document.querySelectorAll('.dropdown-menu-custom.show').forEach(menu => {
+                    menu.classList.remove('show');
+                });
+            }
+        });
+
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.dropdown-item-custom')) {
+                const dropdown = e.target.closest('.dropdown-menu-custom');
+                if (dropdown) {
+                    dropdown.classList.remove('show');
+                }
+            }
+        });
+
         // Modal y lógica de comentarios
         let commentsModal = new bootstrap.Modal(document.getElementById('commentsModal'));
         let commentForm = document.getElementById('commentForm');
