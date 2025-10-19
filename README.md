@@ -21,12 +21,14 @@ This project is a web application for complaint management and visualization, de
 - **Statistics**: Dashboard with complaint metrics and analytics.
 - **Homepage**: Main interface of the system.
 - **Robust Backend**: Express.js with layered architecture.
-- **Database**: MySQL with Knex.js as the query builder.
+- **Database**: MySQL with Sequelize ORM.
 - **Dynamic Views**: EJS templates for the frontend.
+- **Authentication Microservice Integration**: Consumes an external authentication microservice for user login, session validation, and logout.
 - **Email Notifications**: Decoupled email system with Gmail support.
 - **Testing**: Complete test suite using Jest and Supertest.
 - **Linting**: ESLint configuration for code quality.
 - **CI/CD**: GitHub Actions workflow for continuous integration.
+- **Layered Architecture**: Models, repositories, services, and validators for clean separation of concerns.
 
 ## Decoupled Email Architecture
 
@@ -42,51 +44,95 @@ The project includes a **fully refactored email architecture** implementing:
 
 For more details, see [`EMAIL_ARCHITECTURE.md`](./EMAIL_ARCHITECTURE.md) and [`RESUMEN_IMPLEMENTACION.md`](./RESUMEN_IMPLEMENTACION.md).
 
-## 📁 Project Structure
+## Authentication Microservice Integration
+
+This project integrates with an external **authentication microservice** to handle user authentication and session management. The microservice provides the following endpoints:
+
+- **POST /api/auth/login** - Authenticates a user with username and password
+- **GET /api/auth/validate** - Validates if a user has an active session
+- **POST /api/auth/logout** - Closes a user's session
+
+### Configuration
+
+The authentication service URL is configured via the `AUTH_SERVICE_URL` environment variable:
+
+```env
+AUTH_SERVICE_URL=http://localhost:4000
+```
+
+### Implementation Details
+
+- **Service Layer**: `src/services/authService.js` handles all HTTP requests to the auth microservice
+- **Controller**: `src/controllers/authController.js` processes authentication requests from the frontend
+- **Routes**: `src/routes/authRoutes.js` defines the authentication endpoints
+- **Integration**: The complaint service validates user sessions before allowing delete or status change operations
+
+### Error Handling
+
+The auth service includes robust error handling:
+- Returns appropriate HTTP status codes
+- Handles microservice unavailability (503 Service Unavailable)
+- Provides clear error messages for debugging
+
+## Project Structure
 ```
 project_complaints/
-├── 📄 package.json
-├── 🔐 .env
-├── 📝 .gitignore
-├── 📋 README.md
-├── 📚 EMAIL_ARCHITECTURE.md       # Email architecture documentation
-├── 📊 RESUMEN_IMPLEMENTACION.md   # Implementation summary
-├── 🧪 demo-email-service.js       # Email demo script
-├── 🔧 test-email-integration.js   # Email integration tests
-├── ⚙️ eslint.config.mjs           # ESLint configuration
-├── 📂 sources/
-│   ├── 🗄️ dbcomplaints.sql       # Database script
-│   └── 🖼️ images/                 # SVG icons
-├── 📂 src/
-│   ├── 🚀 index.js                # Entry point
-│   ├── 📂 config/                 # Configuration files
+├── package.json
+├── .env
+├── .gitignore
+├── README.md
+├── EMAIL_ARCHITECTURE.md       # Email architecture documentation
+├── RESUMEN_IMPLEMENTACION.md   # Implementation summary
+├── demo-email-service.js       # Email demo script
+├── test-email-integration.js   # Email integration tests
+├── eslint.config.mjs           # ESLint configuration
+├── migrations/                 # Sequelize database migrations
+├── sources/
+│   ├── dbcomplaints.sql       # Database script
+│   └── images/                 # SVG icons
+├── src/
+│   ├── index.js                # Entry point
+│   ├── config/                 # Configuration files
 │   │   ├── constants.js
 │   │   └── db.js
-│   ├── 📂 controllers/            # MVC controllers
+│   ├── controllers/            # MVC controllers
+│   │   ├── authController.js
 │   │   ├── complaintsController.js
 │   │   └── homeController.js
-│   ├── 📂 interfaces/             # Contracts/Interfaces
+│   ├── interfaces/             # Contracts/Interfaces
 │   │   └── IEmailService.js
-│   ├── 📂 middlewares/            # Express middlewares
+│   ├── middlewares/            # Express middlewares
 │   │   └── emailNotifications.js
-│   ├── 📂 routes/                 # Route definitions
+│   ├── models/                 # Sequelize data models
+│   │   ├── comment.js
+│   │   ├── complaint.js
+│   │   ├── entity.js
+│   │   └── user.js
+│   ├── repositories/           # Data access layer
+│   │   └── complaintsRepository.js
+│   ├── routes/                 # Route definitions
+│   │   ├── authRoutes.js
 │   │   ├── complaintsRoutes.js
 │   │   └── homeRoutes.js
-│   ├── 📂 services/               # Business services
+│   ├── services/               # Business services
+│   │   ├── authService.js      # Auth microservice integration
+│   │   ├── complaintService.js # Complaint business logic
 │   │   ├── EmailServiceFactory.js
 │   │   └── GmailEmailService.js
-│   ├── 📂 utils/                  # Utilities
+│   ├── utils/                  # Utilities
 │   │   ├── emailService.js
 │   │   └── emailService.js.backup
-│   └── 📂 views/                  # EJS templates
+│   ├── validators/             # Input validation layer
+│   │   └── complaintsValidator.js
+│   └── views/                  # EJS templates
 │       ├── complaints_list.ejs
 │       ├── complaints_stats.ejs
 │       └── home.ejs
-├── 📂 test/
-│   └── 🧪 app.test.js             # Test suite
-└── 📂 .github/
-    └── 📂 workflows/
-        └── ⚙️ test.yml            # GitHub Actions CI/CD
+├── test/
+│   └── app.test.js             # Test suite
+└── .github/
+    └── workflows/
+        └── test.yml            # GitHub Actions CI/CD
 ```
 
 ## Naming Conventions
@@ -182,11 +228,65 @@ Docs/<Type>/(KAN-XX) Branch Title
    ```powershell
    cp example.env .env
    ```
-   Edit the `.env` file with your MySQL database credentials and Gmail configuration.
+   Edit the `.env` file with your MySQL database credentials, Gmail configuration, and authentication service URL:
+   
+   ```env
+   # Database
+   DB_HOST=localhost
+   DB_PORT=3306
+   DB_USER=your_user
+   DB_PASSWORD=your_password
+   DB_NAME=your_database
+   
+   # Server
+   PORT=3030
+   
+   # Authentication Microservice
+   AUTH_SERVICE_URL=http://localhost:4000
+   
+   # reCAPTCHA
+   RECAPTCHA_SECRET=your_recaptcha_secret
+   
+   # Email (Gmail)
+   EMAIL_USER=your_email@gmail.com
+   EMAIL_PASSWORD=your_app_password
+   
+   # Admin Password
+   ADMIN_PASSWORD=your_admin_password
+   ```
 
 4. **Set up the database:**
-   - Import the `sources/dbcomplaints.sql` file into your MySQL database.
-   - Make sure the credentials in `.env` are correct.
+   
+   **For new installations:**
+   
+   Create the database and run migrations using Sequelize CLI:
+   
+   ```bash
+   # Create database (if not exists)
+   mysql -u your_user -p -e "CREATE DATABASE IF NOT EXISTS your_database;"
+   
+   # Run all migrations
+   npx sequelize-cli db:migrate
+   ```
+   
+   **For existing installations (applying new migrations):**
+   
+   ```bash
+   # Run pending migrations
+   npx sequelize-cli db:migrate
+   ```
+   
+   **Rollback migrations (if needed):**
+   
+   ```bash
+   # Undo last migration
+   npx sequelize-cli db:migrate:undo
+   
+   # Undo all migrations
+   npx sequelize-cli db:migrate:undo:all
+   ```
+   
+   Make sure the credentials in `.env` are correct before running migrations.
 
 5. **Configure Gmail (optional for notifications):**
    - Enable 2-step verification on your Gmail account.
@@ -242,7 +342,7 @@ Users: No immediate visible changes, since the compatibility layer preserves cur
 System: Now supports extensibility to other email providers without requiring changes to the existing code.
 Risks: Credential validation in GmailEmailService may require adjustments in environments using Gmail-specific configurations (OAuth, app passwords).
 
-## 🚀 Usage
+## Usage
 
 ### Development Server
 To start the server:
@@ -273,17 +373,17 @@ node demo-email-service.js
 node test-email-integration.js
 ```
 
-## 🧪 Testing
+## Testing
 To run the tests:
 ```powershell
 npm test
 ```
 
-## 📦 Main Dependencies
+## Main Dependencies
 
 ### Production
 - **express** - Web framework for Node.js
-- **knex** - SQL query builder
+- **sequelize** - ORM for MySQL and other SQL databases
 - **mysql2** - MySQL driver for Node.js
 - **ejs** - Template engine
 - **axios** - HTTP client
@@ -293,10 +393,13 @@ npm test
 ### Development and Testing
 - **jest** - Testing framework
 - **supertest** - HTTP API testing
+- **sequelize-cli** - Sequelize command line interface for migrations
+- **eslint** - JavaScript linter
+- **@eslint/js** - ESLint configurations
 - **eslint** - JavaScript linter
 - **@eslint/js** - ESLint configurations
 
-## 👥 Authors
+## Authors
 
 - **Luis Enrique Hernández Valbuena** - [@Luisen1](https://github.com/Luisen1)
 - **Kevin Johann Jimenez Poveda** - [@KevP2051](https://github.com/KevP2051)
