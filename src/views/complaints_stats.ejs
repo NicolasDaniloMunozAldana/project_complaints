@@ -570,11 +570,14 @@
 
             logoutBtn?.addEventListener('click', async function() {
                 try {
+                    const username = localStorage.getItem('username');
+                    
                     const response = await fetch('/auth/logout', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
-                        }
+                        },
+                        body: JSON.stringify({ username })
                     });
 
                     const data = await response.json();
@@ -584,10 +587,19 @@
                         Swal.fire({
                             icon: 'success',
                             title: 'Sesión cerrada',
-                            text: 'Has cerrado sesión correctamente',
-                            confirmButtonColor: '#2296c7'
+                            text: data.message || 'Has cerrado sesión correctamente',
+                            confirmButtonColor: '#2296c7',
+                            timer: 1500,
+                            showConfirmButton: false
                         }).then(() => {
                             window.location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data.message || 'Error al cerrar sesión',
+                            confirmButtonColor: '#2296c7'
                         });
                     }
                 } catch (error) {
