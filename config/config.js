@@ -8,7 +8,8 @@ module.exports = {
     host: process.env.DB_HOST,
     port: process.env.DB_PORT,
     dialect: 'mysql',
-    logging: false
+    logging: false,
+    AUTH_SERVICE_URL: process.env.AUTH_SERVICE_URL
   },
   test: {
     username: process.env.DB_USER || 'root',
@@ -17,7 +18,8 @@ module.exports = {
     host: process.env.DB_HOST,
     port: process.env.DB_PORT,
     dialect: 'mysql',
-    logging: false
+    logging: false,
+    AUTH_SERVICE_URL: process.env.AUTH_SERVICE_URL
   },
   production: {
     username: process.env.DB_USER || 'root',
@@ -26,6 +28,7 @@ module.exports = {
     host: process.env.DB_HOST,
     port: process.env.DB_PORT,
     dialect: 'mysql',
-    logging: false
+    logging: false,
+    AUTH_SERVICE_URL: process.env.AUTH_SERVICE_URL
   }
 };
