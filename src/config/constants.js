@@ -9,6 +9,9 @@ const HTTP_STATUS = {
 // Puerto por defecto
 const DEFAULT_PORT = 3030;
 
+// URL del servicio de autenticación
+const AUTH_SERVICE_URL = process.env.AUTH_SERVICE_URL || 'http://localhost:4000';
+
 // Base para parseInt
 const PARSE_BASE = 10;
 
@@ -36,4 +39,5 @@ module.exports = {
   PARSE_BASE,
   GMAIL,
   EMAIL_TEMPLATE,
+  AUTH_SERVICE_URL,
 };

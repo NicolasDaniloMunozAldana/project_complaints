@@ -66,8 +66,8 @@
 
 <body>
     <nav class="navbar navbar-light bg-white shadow-sm mb-4">
-        <div class="container d-flex justify-content-center">
-            <span class="navbar-brand mb-0 h1 text-center">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">
                 <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"
                     fill="#2664eb">
                     <path
@@ -75,6 +75,17 @@
                 </svg>
                 Quejas de Entidades Boyacá
             </span>
+            <div id="authSection" class="d-flex align-items-center">
+                <a href="/login" id="loginBtn" class="btn btn-primary btn-sm d-none">
+                    <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
+                </a>
+                <div id="logoutSection" class="d-none align-items-center">
+                    <span class="me-3 text-muted fw-semibold" id="usernameDisplay"></span>
+                    <button id="logoutBtn" class="btn btn-outline-danger btn-sm">
+                        <i class="bi bi-box-arrow-right"></i> Cerrar sesión
+                    </button>
+                </div>
+            </div>
         </div>
     </nav>
 
@@ -103,7 +114,7 @@
                     </button>
                 </div>
             </div>
-            <div class="col-lg-4 col-md-6 mb-3">
+            <div class="col-lg-4 col-md-6 mb-3" id="consultarQuejasCard">
                 <div class="card card-custom py-4">
                     <div class="icon-bg icon-green">
                         <svg xmlns="http://www.w3.org/2000/svg" height="50px" viewBox="0 -960 960 960" width="50px"
@@ -187,6 +198,115 @@
         });
     </script>
     <% } %>
+
+    <script>
+        // Función para actualizar la UI según el estado de autenticación
+        function updateUIForAuthState(isAuthenticated, username) {
+            const logoutSection = document.getElementById('logoutSection');
+            const loginBtn = document.getElementById('loginBtn');
+            const usernameDisplay = document.getElementById('usernameDisplay');
+            const consultarQuejasCard = document.getElementById('consultarQuejasCard');
+
+            if (isAuthenticated && username) {
+                usernameDisplay.textContent = `Usuario: ${username}`;
+                logoutSection.classList.remove('d-none');
+                logoutSection.classList.add('d-flex');
+                loginBtn.classList.add('d-none');
+                // Mostrar el botón de Consultar Quejas si está autenticado
+                if (consultarQuejasCard) {
+                    consultarQuejasCard.style.display = 'block';
+                }
+            } else {
+                loginBtn.classList.remove('d-none');
+                logoutSection.classList.add('d-none');
+                // Ocultar el botón de Consultar Quejas si no está autenticado
+                if (consultarQuejasCard) {
+                    consultarQuejasCard.style.display = 'none';
+                }
+            }
+        }
+
+        // Función para verificar la sesión con el servidor
+        async function verifySession() {
+            const username = localStorage.getItem('username');
+            
+            if (!username) {
+                updateUIForAuthState(false, null);
+                return;
+            }
+
+            try {
+                const response = await fetch(`/auth/validate?username=${username}`);
+                const data = await response.json();
+
+                if (data.success && data.data?.isActive === true) {
+                    // La sesión es válida
+                    updateUIForAuthState(true, username);
+                } else {
+                    // La sesión no es válida, limpiar localStorage
+                    localStorage.removeItem('username');
+                    updateUIForAuthState(false, null);
+                }
+            } catch (error) {
+                console.error('Error al verificar la sesión:', error);
+                // En caso de error, mostrar como no autenticado
+                updateUIForAuthState(false, null);
+            }
+        }
+
+        // Manejar logout y login
+        document.addEventListener('DOMContentLoaded', function() {
+            // Verificar la sesión al cargar la página
+            verifySession();
+
+            const logoutBtn = document.getElementById('logoutBtn');
+
+            logoutBtn?.addEventListener('click', async function() {
+                try {
+                    const username = localStorage.getItem('username');
+                    
+                    const response = await fetch('/auth/logout', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ username })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        localStorage.removeItem('username');
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Sesión cerrada',
+                            text: data.message || 'Has cerrado sesión correctamente',
+                            confirmButtonColor: '#2296c7',
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data.message || 'Error al cerrar sesión',
+                            confirmButtonColor: '#2296c7'
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error al cerrar sesión:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error al cerrar sesión',
+                        confirmButtonColor: '#2296c7'
+                    });
+                }
+            });
+        });
+    </script>
 </body>
 
 </html>

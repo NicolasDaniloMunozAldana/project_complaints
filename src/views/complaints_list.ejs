@@ -145,7 +145,7 @@
 
         .custom_table {
             border-radius: 20px;
-            overflow: hidden;
+            overflow: visible !important;
             border: none;
             width: 100% !important;
         }
@@ -156,6 +156,116 @@
             font-size: 1rem;
             padding: 12px 15px !important;
             vertical-align: middle;
+            overflow: visible !important;
+        }
+        
+        /* Dropdown elegante */
+        .action-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-toggle-custom {
+            background-color: #6c757d;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 16px;
+            color: white;
+            font-weight: 500;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .dropdown-toggle-custom:hover {
+            background-color: #5a6268;
+        }
+
+        .dropdown-toggle-custom i {
+            font-size: 1.1rem;
+        }
+
+        .dropdown-menu-custom {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            min-width: 200px;
+            margin-top: 4px;
+            display: none;
+            z-index: 1000;
+            border: 1px solid #e2e8f0;
+        }
+
+        .dropdown-menu-custom.show {
+            display: block;
+        }
+
+        .dropdown-item-custom {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            color: #4a5568;
+            text-decoration: none;
+            cursor: pointer;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+
+        .dropdown-item-custom:first-child {
+            border-radius: 8px 8px 0 0;
+        }
+
+        .dropdown-item-custom:last-child {
+            border-radius: 0 0 8px 8px;
+        }
+
+        .dropdown-item-custom i {
+            font-size: 1.1rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        .dropdown-item-custom:hover {
+            background-color: #f7fafc;
+        }
+
+        .dropdown-item-custom.comments {
+            color: #339BBF;
+        }
+
+        .dropdown-item-custom.comments:hover {
+            background-color: #ebf8ff;
+        }
+
+        .dropdown-item-custom.status {
+            color: #10B981;
+        }
+
+        .dropdown-item-custom.status:hover {
+            background-color: #d1fae5;
+        }
+
+        .dropdown-item-custom.delete {
+            color: #e53e3e;
+        }
+
+        .dropdown-item-custom.delete:hover {
+            background-color: #fff5f5;
+        }
+
+        .dropdown-divider-custom {
+            height: 1px;
+            background-color: #e2e8f0;
+            margin: 4px 0;
         }
 
         .custom_th {
@@ -515,20 +625,47 @@
         }
 
         @media (max-width: 768px) {
-            .btn-group {
-                display: flex;
-                flex-direction: column;
-                gap: 5px;
+            .action-dropdown {
+                width: 100%;
             }
-            
-            .btn-group .btn {
-                margin: 0;
+
+            .dropdown-toggle-custom {
+                width: 100%;
+                justify-content: center;
                 font-size: 0.85rem;
+                padding: 10px 12px;
+            }
+
+            .dropdown-menu-custom {
+                left: 0;
+                right: 0;
+                min-width: 100%;
+            }
+
+            .dropdown-item-custom {
+                padding: 14px 16px;
+                font-size: 0.9rem;
             }
 
             .badge {
                 font-size: 0.8rem;
                 padding: 0.4rem 0.6rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .dropdown-toggle-custom {
+                font-size: 0.8rem;
+                padding: 8px 10px;
+            }
+
+            .dropdown-item-custom {
+                padding: 12px 14px;
+                font-size: 0.85rem;
+            }
+
+            .dropdown-item-custom i {
+                font-size: 1rem;
             }
         }
 
@@ -569,21 +706,54 @@
                 <span class="d-none d-sm-inline">Volver al inicio</span>
                 <span class="d-inline d-sm-none">Inicio</span>
             </a>
+            <div id="authSection" class="d-flex align-items-center">
+                <a href="/login" id="loginBtn" class="btn btn-primary btn-sm d-none">
+                    <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
+                </a>
+                <div id="logoutSection" class="d-none align-items-center">
+                    <span class="me-3 text-muted fw-semibold" id="usernameDisplay"></span>
+                    <button id="logoutBtn" class="btn btn-outline-danger btn-sm">
+                        <i class="bi bi-box-arrow-right"></i> Cerrar sesión
+                    </button>
+                </div>
+            </div>
         </div>
     </nav>
 
     <div class="container text-center px-3">
-        <div class="icon-bg icon-blue mb-2" style="background:#10B981;">
-            <svg xmlns="http://www.w3.org/2000/svg" height="40" viewBox="0 0 24 24" width="40" fill="#fff">
-                <path d="M0 0h24v24H0z" fill="none" />
-                <path
-                    d="M19 5v14H5V5h14m1.1-2H3.9c-.5 0-.9.4-.9.9v16.2c0 .4.4.9.9.9h16.2c.4 0 .9-.5.9-.9V3.9c0-.5-.5-.9-.9-.9zM11 7h6v2h-6V7zm0 4h6v2h-6v-2zm0 4h6v2h-6zM7 7h2v2H7zm0 4h2v2H7zm0 4h2v2H7z" />
-            </svg>
+        <!-- Mensaje cuando no hay sesión activa -->
+        <div id="no-session-container" style="display:none;">
+            <div class="icon-bg icon-blue mb-2" style="background:#dc3545;">
+                <svg xmlns="http://www.w3.org/2000/svg" height="40" viewBox="0 0 24 24" width="40" fill="#fff">
+                    <path d="M0 0h24v24H0z" fill="none"/>
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                </svg>
+            </div>
+            <h1 class="title">Sesión Requerida</h1>
+            <p class="subtitle">Debes iniciar sesión para consultar las quejas</p>
+            <div class="d-flex justify-content-center gap-3 mt-4">
+                <a href="/login" class="btn btn-primary btn-lg">
+                    <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
+                </a>
+                <a href="/" class="btn btn-outline-secondary btn-lg">
+                    <i class="bi bi-house-door"></i> Volver al Inicio
+                </a>
+            </div>
         </div>
-        <h1 class="title">Consultar Quejas</h1>
-        <p class="subtitle">Consultar las quejas realizadas y genera un reporte de todas ellas.</p>
 
-        <div class="captcha-container">
+        <!-- Contenido principal cuando hay sesión -->
+        <div id="main-content-container">
+            <div class="icon-bg icon-blue mb-2" style="background:#10B981;">
+                <svg xmlns="http://www.w3.org/2000/svg" height="40" viewBox="0 0 24 24" width="40" fill="#fff">
+                    <path d="M0 0h24v24H0z" fill="none" />
+                    <path
+                        d="M19 5v14H5V5h14m1.1-2H3.9c-.5 0-.9.4-.9.9v16.2c0 .4.4.9.9.9h16.2c.4 0 .9-.5.9-.9V3.9c0-.5-.5-.9-.9-.9zM11 7h6v2h-6V7zm0 4h6v2h-6v-2zm0 4h6v2h-6zM7 7h2v2H7zm0 4h2v2H7zm0 4h2v2H7z" />
+                </svg>
+            </div>
+            <h1 class="title">Consultar Quejas</h1>
+            <p class="subtitle">Consultar las quejas realizadas y genera un reporte de todas ellas.</p>
+
+            <div class="captcha-container">
             <div class="captcha-wrapper">
                 <p class="captcha-message mb-3">
                     Por favor, verifica que eres humano para ver la lista de quejas
@@ -595,7 +765,14 @@
 
         <div class="container px-0" id="complaints-container" style="display:none;">
             <% if (complaints.length> 0) { %>
-                <div class="table-responsive">
+                <div class="mb-3 d-flex align-items-center gap-2">
+                    <label for="entityFilter" class="form-label mb-0 fw-bold" style="color: #10B981;">Filtrar por Entidad:</label>
+                    <select id="entityFilter" class="form-select" style="max-width: 300px; border-color: #10B981;">
+                        <option value="">Todas las entidades</option>
+                    </select>
+                </div>
+                
+                <div class="table-responsive" style="overflow-y: visible !important;">
                     <table class="table custom_table table-striped mt-3 mb-4">
                         <thead>
                             <tr>
@@ -655,23 +832,34 @@
                                         </span>
                                     </td>
                                     <td data-label="Acciones">
-                                        <div class="btn-group" role="group">
-                                            <button class="btn btn-info btn-sm view-comments-btn" 
-                                                    data-id="<%= c.id_complaint %>" 
-                                                    data-entity="<%= c.public_entity %>">
-                                                <i class="bi bi-chat-dots"></i> Comentarios
+                                        <div class="action-dropdown">
+                                            <button class="dropdown-toggle-custom" onclick="toggleDropdown(this)">
+                                                <i class="bi bi-three-dots-vertical"></i>
+                                                <span>Acciones</span>
                                             </button>
-                                            <button class="btn btn-primary btn-sm change-status-btn" 
-                                                    data-id="<%= c.id_complaint %>" 
-                                                    data-entity="<%= c.public_entity %>"
-                                                    data-current-status="<%= c.complaint_status %>">
-                                                <i class="bi bi-arrow-repeat"></i> Cambiar Estado
-                                            </button>
-                                            <button class="btn btn-danger btn-sm delete-btn" 
-                                                    data-id="<%= c.id_complaint %>" 
-                                                    data-entity="<%= c.public_entity %>">
-                                                <i class="bi bi-trash"></i> Borrar
-                                            </button>
+                                            <div class="dropdown-menu-custom">
+                                                <button class="dropdown-item-custom comments view-comments-btn" 
+                                                        data-id="<%= c.id_complaint %>" 
+                                                        data-entity="<%= c.public_entity %>">
+                                                    <i class="bi bi-chat-dots-fill"></i>
+                                                    <span>Ver Comentarios</span>
+                                                </button>
+                                                <div class="dropdown-divider-custom"></div>
+                                                <button class="dropdown-item-custom status change-status-btn" 
+                                                        data-id="<%= c.id_complaint %>" 
+                                                        data-entity="<%= c.public_entity %>"
+                                                        data-current-status="<%= c.complaint_status %>">
+                                                    <i class="bi bi-arrow-repeat"></i>
+                                                    <span>Cambiar Estado</span>
+                                                </button>
+                                                <div class="dropdown-divider-custom"></div>
+                                                <button class="dropdown-item-custom delete delete-btn" 
+                                                        data-id="<%= c.id_complaint %>" 
+                                                        data-entity="<%= c.public_entity %>">
+                                                    <i class="bi bi-trash-fill"></i>
+                                                    <span>Eliminar Queja</span>
+                                                </button>
+                                            </div>
                                         </div>
                                     </td>
                                 </tr>
@@ -688,63 +876,9 @@
                                 Generar Reporte
                             </a>
                         </div>
+            </div>
         </div>
     </div>
-
-        <!-- Modal para confirmación de borrado -->
-        <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="deleteModalLabel">Confirmar Borrado de Queja</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                    </div>
-                    <div class="modal-body">
-                        <form id="deleteForm">
-                            <input type="hidden" id="delete-complaint-id" name="id_complaint">
-                            <div class="mb-3">
-                                <label for="delete-password" class="form-label">Contraseña para borrar:</label>
-                                <input type="password" class="form-control" id="delete-password" name="password" required>
-                            </div>
-                            <div id="delete-error" class="text-danger mb-2" style="display:none;"></div>
-                            <button type="submit" class="btn btn-danger">Borrar</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Modal para cambiar estado de queja -->
-        <div class="modal fade" id="statusModal" tabindex="-1" aria-labelledby="statusModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="statusModalLabel">Cambiar Estado de Queja</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                    </div>
-                    <div class="modal-body">
-                        <form id="statusForm">
-                            <input type="hidden" id="status-complaint-id" name="id_complaint">
-                            <div class="mb-3">
-                                <label for="complaint-status" class="form-label">Nuevo Estado:</label>
-                                <select class="form-select" id="complaint-status" name="complaint_status" required>
-                                    <option value="">Selecciona un estado</option>
-                                    <option value="abierta">Abierta</option>
-                                    <option value="en_revision">En Revisión</option>
-                                    <option value="cerrada">Cerrada</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label for="status-password" class="form-label">Contraseña para cambiar estado:</label>
-                                <input type="password" class="form-control" id="status-password" name="password" required>
-                            </div>
-                            <div id="status-error" class="text-danger mb-2" style="display:none;"></div>
-                            <button type="submit" class="btn btn-primary">Cambiar Estado</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <!-- Modal para ver y agregar comentarios -->
         <div class="modal fade" id="commentsModal" tabindex="-1" aria-labelledby="commentsModalLabel" aria-hidden="true">
@@ -805,18 +939,39 @@
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
-        // Modal y lógica de borrado
-        let deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
-        let deleteForm = document.getElementById('deleteForm');
-        let deleteError = document.getElementById('delete-error');
-        let deleteIdInput = document.getElementById('delete-complaint-id');
+        // Función para manejar el dropdown
+        function toggleDropdown(button) {
+            const dropdown = button.nextElementSibling;
+            const isOpen = dropdown.classList.contains('show');
+            
+            // Cerrar todos los dropdowns abiertos
+            document.querySelectorAll('.dropdown-menu-custom.show').forEach(menu => {
+                menu.classList.remove('show');
+            });
+            
+            // Si no estaba abierto, abrirlo
+            if (!isOpen) {
+                dropdown.classList.add('show');
+            }
+        }
 
-        // Modal y lógica de cambio de estado
-        let statusModal = new bootstrap.Modal(document.getElementById('statusModal'));
-        let statusForm = document.getElementById('statusForm');
-        let statusError = document.getElementById('status-error');
-        let statusIdInput = document.getElementById('status-complaint-id');
-        let statusSelect = document.getElementById('complaint-status');
+        // Cerrar dropdown al hacer click fuera
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.action-dropdown')) {
+                document.querySelectorAll('.dropdown-menu-custom.show').forEach(menu => {
+                    menu.classList.remove('show');
+                });
+            }
+        });
+
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.dropdown-item-custom')) {
+                const dropdown = e.target.closest('.dropdown-menu-custom');
+                if (dropdown) {
+                    dropdown.classList.remove('show');
+                }
+            }
+        });
 
         // Modal y lógica de comentarios
         let commentsModal = new bootstrap.Modal(document.getElementById('commentsModal'));
@@ -824,28 +979,62 @@
         let commentError = document.getElementById('comment-error');
         let commentIdInput = document.getElementById('comment-complaint-id');
 
+        // Función para validar sesión del usuario
+        async function validateUserSession() {
+            try {
+                const username = localStorage.getItem('username');
+                if (!username) return false;
+                
+                const response = await fetch(`/auth/validate?username=${username}`);
+                const data = await response.json();
+                return data.success && data.data?.isActive === true;
+            } catch (error) {
+                console.error('Error validando sesión:', error);
+                return false;
+            }
+        }
+
+        // Función para redirigir al login
+        function redirectToLogin(message) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Sesión inactiva',
+                text: message || 'Por favor, inicie sesión para continuar',
+                confirmButtonColor: '#2296c7',
+                confirmButtonText: 'Ir al Login',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                showCancelButton: true,
+                cancelButtonText: 'Cancelar',
+                cancelButtonColor: '#6c757d'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Guardar la URL actual antes de redirigir
+                    localStorage.setItem('redirectAfterLogin', window.location.pathname);
+                    window.location.href = '/login';
+                }
+                // Si cancela, no hace nada y permanece en la página
+            });
+        }
+
         document.addEventListener('click', function(e) {
             // Manejar click en botón de borrar
             if (e.target.closest('.delete-btn')) {
                 const btn = e.target.closest('.delete-btn');
-                deleteIdInput.value = btn.getAttribute('data-id');
-                deleteError.style.display = 'none';
-                deleteForm.reset();
-                deleteModal.show();
+                const complaintId = btn.getAttribute('data-id');
+                const entity = btn.getAttribute('data-entity');
+                
+                handleDeleteComplaint(complaintId, entity);
             }
 
             // Manejar click en botón de cambiar estado
             if (e.target.closest('.change-status-btn')) {
                 const btn = e.target.closest('.change-status-btn');
-                statusIdInput.value = btn.getAttribute('data-id');
+                const complaintId = btn.getAttribute('data-id');
+                const entity = btn.getAttribute('data-entity');
                 const currentStatus = btn.getAttribute('data-current-status');
                 
-                // Limpiar selección anterior
-                statusSelect.value = '';
-                statusError.style.display = 'none';
-                document.getElementById('status-password').value = '';
-                
-                statusModal.show();
+                handleChangeStatus(complaintId, entity, currentStatus);
             }
 
             // Manejar click en botón de ver comentarios
@@ -854,94 +1043,182 @@
                 const complaintId = btn.getAttribute('data-id');
                 const entity = btn.getAttribute('data-entity');
                 
-                // Configurar el modal
                 commentIdInput.value = complaintId;
                 document.getElementById('modal-entity').textContent = entity;
                 commentError.style.display = 'none';
                 commentForm.reset();
-                commentIdInput.value = complaintId; // Restaurar después del reset
+                commentIdInput.value = complaintId;
                 
-                // Cargar detalles de la queja y comentarios
                 loadComplaintDetails(complaintId);
                 commentsModal.show();
             }
         });
 
-        deleteForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const id = deleteIdInput.value;
-            const password = document.getElementById('delete-password').value;
-            fetch('/complaints/delete', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id_complaint: id, password })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    deleteModal.hide();
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Queja borrada',
-                        text: 'La queja fue eliminada correctamente',
-                        confirmButtonColor: '#2296c7'
-                    }).then(() => {
-                        location.reload();
-                    });
-                } else {
-                    deleteError.textContent = data.message || 'Contraseña incorrecta';
-                    deleteError.style.display = 'block';
-                }
-            })
-            .catch(() => {
-                deleteError.textContent = 'Error al borrar la queja';
-                deleteError.style.display = 'block';
-            });
-        });
-
-        statusForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const id = statusIdInput.value;
-            const newStatus = statusSelect.value;
-            const password = document.getElementById('status-password').value;
+        // Función para manejar eliminación de queja
+        async function handleDeleteComplaint(complaintId, entity) {
+            // Validar sesión primero
+            const isSessionActive = await validateUserSession();
             
-            fetch('/complaints/update-status', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    id_complaint: id, 
-                    complaint_status: newStatus, 
-                    password 
-                })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    statusModal.hide();
-                    let statusText = '';
-                    switch(newStatus) {
-                        case 'abierta': statusText = 'Abierta'; break;
-                        case 'en_revision': statusText = 'En Revisión'; break;
-                        case 'cerrada': statusText = 'Cerrada'; break;
+            if (!isSessionActive) {
+                redirectToLogin('Debe iniciar sesión para eliminar quejas');
+                return;
+            }
+
+            // Si la sesión está activa, pedir confirmación
+            Swal.fire({
+                title: '¿Está seguro?',
+                text: `¿Desea eliminar la queja de ${entity}?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const username = localStorage.getItem('username');
+                        console.log('Username para delete:', username);
+                        if (!username) {
+                            console.error('No se encontró username en localStorage para delete');
+                            throw new Error('No hay sesión activa');
+                        }
+                        
+                        const response = await fetch('/complaints/delete', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ 
+                                id_complaint: complaintId,
+                                username: username
+                            })
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (data.redirectToLogin) {
+                            redirectToLogin(data.message);
+                            return;
+                        }
+                        
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Queja eliminada',
+                                text: 'La queja fue eliminada correctamente',
+                                confirmButtonColor: '#2296c7'
+                            }).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: data.message || 'Error al eliminar la queja',
+                                confirmButtonColor: '#2296c7'
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Error al eliminar la queja. Intente nuevamente.',
+                            confirmButtonColor: '#2296c7'
+                        });
                     }
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Estado actualizado',
-                        text: `El estado de la queja se cambió a: ${statusText}`,
-                        confirmButtonColor: '#2296c7'
-                    }).then(() => {
-                        location.reload();
-                    });
-                } else {
-                    statusError.textContent = data.message || 'Error al cambiar el estado';
-                    statusError.style.display = 'block';
                 }
-            })
-            .catch(() => {
-                statusError.textContent = 'Error al cambiar el estado de la queja';
-                statusError.style.display = 'block';
             });
-        });
+        }
+
+        // Función para manejar cambio de estado
+        async function handleChangeStatus(complaintId, entity, currentStatus) {
+            // Validar sesión primero
+            const isSessionActive = await validateUserSession();
+            
+            if (!isSessionActive) {
+                redirectToLogin('Debe iniciar sesión para cambiar el estado de quejas');
+                return;
+            }
+
+            // Si la sesión está activa, pedir nuevo estado
+            const statusOptions = {
+                'abierta': 'Abierta',
+                'en_revision': 'En Revisión',
+                'cerrada': 'Cerrada'
+            };
+
+            const { value: newStatus } = await Swal.fire({
+                title: 'Cambiar Estado',
+                text: `Queja de ${entity}`,
+                input: 'select',
+                inputOptions: statusOptions,
+                inputPlaceholder: 'Seleccione el nuevo estado',
+                showCancelButton: true,
+                confirmButtonColor: '#2296c7',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Cambiar',
+                cancelButtonText: 'Cancelar',
+                inputValidator: (value) => {
+                    if (!value) {
+                        return 'Debe seleccionar un estado';
+                    }
+                }
+            });
+
+            if (newStatus) {
+                try {
+                    const username = localStorage.getItem('username');
+                    console.log('Username para update:', username);
+                    if (!username) {
+                        console.error('No se encontró username en localStorage para update');
+                        throw new Error('No hay sesión activa');
+                    }
+                    
+                    const response = await fetch('/complaints/update-status', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            id_complaint: complaintId, 
+                            complaint_status: newStatus,
+                            username: username
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.redirectToLogin) {
+                        redirectToLogin(data.message);
+                        return;
+                    }
+                    
+                    if (data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Estado actualizado',
+                            text: `El estado se cambió a: ${statusOptions[newStatus]}`,
+                            confirmButtonColor: '#2296c7'
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data.message || 'Error al cambiar el estado',
+                            confirmButtonColor: '#2296c7'
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error al cambiar el estado. Intente nuevamente.',
+                        confirmButtonColor: '#2296c7'
+                    });
+                }
+            }
+        }
 
         // --- CAPTCHA LOCALSTORAGE ---
         const CAPTCHA_KEY = 'captcha_token';
@@ -961,16 +1238,59 @@
             document.querySelector('.captcha-container').style.display = 'none';
             document.getElementById('complaints-container').style.display = 'block';
             if ($('.custom_table').length && !$.fn.DataTable.isDataTable('.custom_table')) {
-                $('.custom_table').DataTable({
+                const table = $('.custom_table').DataTable({
                     paging: true,
                     pageLength: 5,
                     lengthChange: false,
-                    searching: false,
+                    searching: true,
                     info: false,
                     ordering: false,
-                    responsive: true
+                    responsive: true,
+                    dom: 'rtip'
+                });
+                
+                // Poblar el filtro de entidades
+                populateEntityFilter(table);
+                
+                // Agregar evento de filtrado
+                $('#entityFilter').on('change', function() {
+                    const selectedEntity = $(this).val();
+                    if (selectedEntity === '') {
+                        // Mostrar todas las entidades
+                        table.search('').columns().search('').draw();
+                    } else {
+                        // Filtrar por la entidad exacta seleccionada usando expresión regular
+                        table.column(0).search('^' + selectedEntity + '$', true, false).draw();
+                    }
                 });
             }
+        }
+
+        function populateEntityFilter(table) {
+            const entities = new Set();
+            
+            // Obtener todas las entidades directamente del tbody
+            $('.custom_table tbody tr').each(function() {
+                const entityText = $(this).find('td').first().text().trim();
+                if (entityText) {
+                    entities.add(entityText);
+                }
+            });
+            
+            // Ordenar entidades alfabéticamente
+            const sortedEntities = Array.from(entities).sort();
+            const select = $('#entityFilter');
+            
+            // Limpiar opciones existentes excepto la primera
+            select.find('option:not(:first)').remove();
+            
+            // Agregar cada entidad como opción
+            sortedEntities.forEach(function(entity) {
+                select.append($('<option>', {
+                    value: entity,
+                    text: entity
+                }));
+            });
         }
         // Función para cargar detalles de la queja y comentarios
         function loadComplaintDetails(complaintId) {
@@ -1136,6 +1456,111 @@
 
         window.addEventListener('resize', adjustRecaptcha);
         window.addEventListener('load', adjustRecaptcha);
+
+        // Función para verificar la sesión sin usar localStorage directamente
+        async function verifySession() {
+            const username = localStorage.getItem('username');
+            
+            if (!username) {
+                showNoSessionMessage();
+                return false;
+            }
+
+            try {
+                const response = await fetch(`/auth/validate?username=${encodeURIComponent(username)}`);
+                const data = await response.json();
+
+                if (data.success && data.data?.isActive === true) {
+                    showMainContent();
+                    return true;
+                } else {
+                    localStorage.removeItem('username');
+                    showNoSessionMessage();
+                    return false;
+                }
+            } catch (error) {
+                console.error('Error al verificar la sesión:', error);
+                showNoSessionMessage();
+                return false;
+            }
+        }
+
+        function showNoSessionMessage() {
+            document.getElementById('no-session-container').style.display = 'block';
+            document.getElementById('main-content-container').style.display = 'none';
+        }
+
+        function showMainContent() {
+            document.getElementById('no-session-container').style.display = 'none';
+            document.getElementById('main-content-container').style.display = 'block';
+        }
+
+        // Manejar logout y login
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Verificar la sesión al cargar la página
+            const hasSession = await verifySession();
+            
+            if (!hasSession) {
+                return; // No continuar si no hay sesión
+            }
+
+            const username = localStorage.getItem('username');
+            const logoutSection = document.getElementById('logoutSection');
+            const loginBtn = document.getElementById('loginBtn');
+            const usernameDisplay = document.getElementById('usernameDisplay');
+            const logoutBtn = document.getElementById('logoutBtn');
+
+            if (username) {
+                usernameDisplay.textContent = `Usuario: ${username}`;
+                logoutSection.classList.remove('d-none');
+                logoutSection.classList.add('d-flex');
+                loginBtn.classList.add('d-none');
+            } else {
+                loginBtn.classList.remove('d-none');
+                logoutSection.classList.add('d-none');
+            }
+
+            logoutBtn?.addEventListener('click', async function() {
+                try {
+                    const response = await fetch('/auth/logout', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        localStorage.removeItem('username');
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Sesión cerrada',
+                            text: data.message,
+                            confirmButtonColor: '#2296c7',
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data.message,
+                            confirmButtonColor: '#2296c7'
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error al cerrar sesión',
+                        confirmButtonColor: '#2296c7'
+                    });
+                }
+            });
+        });
     </script>
 </body>
 
