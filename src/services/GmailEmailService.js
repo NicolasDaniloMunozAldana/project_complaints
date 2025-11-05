@@ -200,8 +200,8 @@ class GmailEmailService extends IEmailService {
           name: 'Sistema de Quejas',
           address: process.env.EMAIL_USER
         },
-        to: 'munozaldananicolasdanilo@gmail.com',
-        cc: 'quejas.entidadesboyaca@gmail.com',
+        to: 'boyacaquejas47@gmail.com',
+        cc: 'kevin.jimenez03@uptc.edu.co',
         subject: `🔔 Solicitud de Reporte - ${action}`,
         html: this.generateEmailTemplate(emailData),
         priority: 'normal',
