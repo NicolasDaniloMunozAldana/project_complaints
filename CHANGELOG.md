@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.4] - 2025-11-05
+
+### Removed
+- **reCAPTCHA Verification System**
+  - Removed Google reCAPTCHA v2 integration from complaints list view
+  - Removed `/verify-captcha` POST endpoint from server
+  - Removed `RECAPTCHA_SECRET` environment variable from configuration
+  - Removed captcha HTML container, wrapper, and message components
+  - Removed captcha verification JavaScript logic and callbacks
+  - Removed `onCaptchaSuccess()` callback function
+  - Removed `isCaptchaValid()` validation function
+  - Removed `adjustRecaptcha()` responsive adjustment function
+  - Removed captcha-related event listeners (DOMContentLoaded, resize, load)
+  - Removed captcha localStorage management (token and expiration)
+  - Removed all captcha-related CSS styles and media query adjustments
+  - Removed Google reCAPTCHA API script from page head
+  - Simplified `showComplaintsList()` function by removing captcha checks
+
+### Changed
+- **Complaints List Access**
+  - Complaints list now displays immediately without captcha verification
+  - Removed display:none styling from complaints container
+  - Streamlined user experience with direct access to complaints
+
 ## [0.0.3] - 2025-10-22
 
 ### Added

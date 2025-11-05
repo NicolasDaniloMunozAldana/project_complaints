@@ -6,7 +6,7 @@ This project is a web application for complaint management and visualization, de
 
 For a detailed history of changes, new features, and fixes across all versions, see [CHANGELOG.md](./CHANGELOG.md).
 
-**Current Version:** 0.0.3
+**Current Version:** 0.0.4
 
 ## Main Features
 - **Complaint Management**: Full listing and visualization of complaints.
