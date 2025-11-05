@@ -1388,47 +1388,6 @@
                 commentError.style.display = 'block';
             });
         });
-        function onCaptchaSuccess(token) {
-            fetch('/verify-captcha', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ token: token })
-            })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        localStorage.setItem(CAPTCHA_KEY, token);
-                        localStorage.setItem(CAPTCHA_TIME_KEY, Date.now().toString());
-                        showComplaintsList();
-                    } else {
-                        alert('Verificación fallida. Por favor, intenta de nuevo.');
-                        grecaptcha.reset();
-                    }
-                })
-                .catch(err => {
-                    console.error('Error:', err);
-                    alert('Error al verificar. Por favor, intenta de nuevo.');
-                    grecaptcha.reset();
-                });
-        }
-
-        window.addEventListener('DOMContentLoaded', function() {
-            if (isCaptchaValid()) {
-                showComplaintsList();
-            }
-        });
-
-        // Ajustar el reCAPTCHA al tamaño de pantalla
-        function adjustRecaptcha() {
-            if (window.innerWidth <= 768) {
-                document.querySelector('.g-recaptcha').style.transform = 'scale(0.85)';
-            } else {
-                document.querySelector('.g-recaptcha').style.transform = 'scale(1)';
-            }
-        }
-
-        window.addEventListener('resize', adjustRecaptcha);
-        window.addEventListener('load', adjustRecaptcha);
 
         // Función para verificar la sesión sin usar localStorage directamente
         async function verifySession() {
