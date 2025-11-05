@@ -236,9 +236,6 @@ Docs/<Type>/(KAN-XX) Branch Title
    # Authentication Microservice
    AUTH_SERVICE_URL=http://localhost:4000
    
-   # reCAPTCHA
-   RECAPTCHA_SECRET=your_recaptcha_secret
-   
    # Email (Gmail)
    EMAIL_USER=your_email@gmail.com
    EMAIL_PASSWORD=your_app_password
