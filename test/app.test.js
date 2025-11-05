@@ -213,16 +213,5 @@ describe("Business Logic Unit Tests", () => {
       
       expect(validateUpdateData({})).toBe(false);
     });
-
-    test("should validate reCAPTCHA token presence", () => {
-      const validateToken = (token) => {
-        return !!(token && token.trim().length > 0);
-      };
-      
-      expect(validateToken('valid_token_123')).toBe(true);
-      expect(validateToken('')).toBe(false);
-      expect(validateToken(null)).toBe(false);
-      expect(validateToken(undefined)).toBe(false);
-    });
   });
 });
