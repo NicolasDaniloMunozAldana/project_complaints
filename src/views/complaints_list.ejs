@@ -1209,23 +1209,7 @@
             }
         }
 
-        // --- CAPTCHA LOCALSTORAGE ---
-        const CAPTCHA_KEY = 'captcha_token';
-        const CAPTCHA_TIME_KEY = 'captcha_token_time';
-        const CAPTCHA_EXPIRATION_MINUTES = 30;
-
-        function isCaptchaValid() {
-            const token = localStorage.getItem(CAPTCHA_KEY);
-            const time = localStorage.getItem(CAPTCHA_TIME_KEY);
-            if (!token || !time) return false;
-            const now = Date.now();
-            const diff = (now - parseInt(time, 10)) / 1000 / 60;
-            return diff < CAPTCHA_EXPIRATION_MINUTES;
-        }
-
         function showComplaintsList() {
-            document.querySelector('.captcha-container').style.display = 'none';
-            document.getElementById('complaints-container').style.display = 'block';
             if ($('.custom_table').length && !$.fn.DataTable.isDataTable('.custom_table')) {
                 const table = $('.custom_table').DataTable({
                     paging: true,
