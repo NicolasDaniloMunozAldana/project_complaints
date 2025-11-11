@@ -16,25 +16,22 @@ For a detailed history of changes, new features, and fixes across all versions, 
 - **Database**: MySQL with Sequelize ORM.
 - **Dynamic Views**: EJS templates for the frontend.
 - **Authentication Microservice Integration**: Consumes an external authentication microservice for user login, session validation, and logout.
-- **Email Notifications**: Decoupled email system with Gmail support.
+- **Email Notifications**: Asynchronous email notifications via Kafka to external email service.
 - **Testing**: Complete test suite using Jest and Supertest.
 - **Linting**: ESLint configuration for code quality.
 - **CI/CD**: GitHub Actions workflow for continuous integration.
 - **Layered Architecture**: Models, repositories, services, and validators for clean separation of concerns.
 
-## Decoupled Email Architecture
+## Email Notifications via Kafka
 
-The project includes a **fully refactored email architecture** implementing:
+The project publishes email notification events to Kafka, which are consumed and sent by a separate email service (`project_email_sender`). This decoupled architecture provides:
 
-- **Clean Architecture** and **SOLID principles**
-- **Factory Pattern** + **Singleton Pattern**
-- **Interface-based design** for extensibility
-- **Gmail support** with credential validation
-- **Backward compatibility** with previous implementation
-- **Responsive HTML templates**
-- **Robust error handling**
+- **Asynchronous processing**: Email sending doesn't block the main application
+- **Scalability**: Email service can scale independently
+- **Reliability**: Failed emails are handled via Dead Letter Queue (DLQ)
+- **Separation of concerns**: Email logic is isolated in a dedicated service
 
-For more details, see [`EMAIL_ARCHITECTURE.md`](./EMAIL_ARCHITECTURE.md) and [`RESUMEN_IMPLEMENTACION.md`](./RESUMEN_IMPLEMENTACION.md).
+The application publishes events to the `email-notifications` Kafka topic when complaints are created or updated. The actual email sending is handled by the `project_email_sender` microservice.
 
 ## Authentication Microservice Integration
 
@@ -73,10 +70,7 @@ project_complaints/
 ├── .env
 ├── .gitignore
 ├── README.md
-├── EMAIL_ARCHITECTURE.md       # Email architecture documentation
 ├── RESUMEN_IMPLEMENTACION.md   # Implementation summary
-├── demo-email-service.js       # Email demo script
-├── test-email-integration.js   # Email integration tests
 ├── eslint.config.mjs           # ESLint configuration
 ├── migrations/                 # Sequelize database migrations
 ├── sources/
@@ -91,29 +85,27 @@ project_complaints/
 │   │   ├── authController.js
 │   │   ├── complaintsController.js
 │   │   └── homeController.js
-│   ├── interfaces/             # Contracts/Interfaces
-│   │   └── IEmailService.js
-│   ├── middlewares/            # Express middlewares
-│   │   └── emailNotifications.js
 │   ├── models/                 # Sequelize data models
 │   │   ├── comment.js
 │   │   ├── complaint.js
 │   │   ├── entity.js
 │   │   └── user.js
 │   ├── repositories/           # Data access layer
-│   │   └── complaintsRepository.js
+│   │   ├── commentsRepository.js
+│   │   ├── complaintsRepository.js
+│   │   └── entitiesRepository.js
 │   ├── routes/                 # Route definitions
 │   │   ├── authRoutes.js
 │   │   ├── complaintsRoutes.js
-│   │   └── homeRoutes.js
+│   │   ├── homeRoutes.js
+│   │   └── loginRoutes.js
 │   ├── services/               # Business services
 │   │   ├── authService.js      # Auth microservice integration
 │   │   ├── complaintService.js # Complaint business logic
-│   │   ├── EmailServiceFactory.js
-│   │   └── GmailEmailService.js
+│   │   ├── EmailPublisherService.js  # Kafka email publisher
+│   │   └── KafkaProducerService.js   # Kafka producer
 │   ├── utils/                  # Utilities
-│   │   ├── emailService.js
-│   │   └── emailService.js.backup
+│   │   └── emailHelpers.js     # Email helper functions
 │   ├── validators/             # Input validation layer
 │   │   └── complaintsValidator.js
 │   └── views/                  # EJS templates
@@ -142,7 +134,7 @@ All issues must be named using the following format:
 - `KAN` is the project identifier and **must** always be uppercase.
 - `XX` is the issue number.
 - The title should be concise and clearly describe the issue.
-- Example:  
+- Example:
   ```
   [KAN-47] Update readme to follow the new standard structure for naming branches, issues and pull requests
   ```
@@ -158,7 +150,7 @@ Branches must follow the [Gitflow branching model](https://www.atlassian.com/git
 - `<type>`: The Gitflow prefix (e.g., `feature`, `bugfix`, `hotfix`, `release`).
 - `(KAN-XX)`: The project identifier and issue number, in parentheses, immediately after the Gitflow prefix. `KAN` must be uppercase.
 - `branch-name`: A concise, kebab-case description of the branch purpose.
-- Example:  
+- Example:
   ```
   feature/(KAN-46)-add-status-to-complaints
   bugfix/(KAN-51)-fix-email-validation
@@ -180,7 +172,7 @@ Docs/<Type>/(KAN-XX) Branch Title
 - `(KAN-XX)`: The project identifier and issue number, in parentheses, immediately after the type.
 - `Branch Title`: Short, descriptive, and in [title case](https://capitalizemytitle.com/) or plain English.
 - For documentation pull requests, start the title with `Docs/`.
-- Examples:  
+- Examples:
   ```
   Feature/(KAN-46) Add status to complaints
   Bugfix/(KAN-51) Fix email validation
@@ -221,7 +213,7 @@ Docs/<Type>/(KAN-XX) Branch Title
    cp example.env .env
    ```
    Edit the `.env` file with your MySQL database credentials, Gmail configuration, and authentication service URL:
-   
+
    ```env
    # Database
    DB_HOST=localhost
@@ -229,52 +221,52 @@ Docs/<Type>/(KAN-XX) Branch Title
    DB_USER=your_user
    DB_PASSWORD=your_password
    DB_NAME=your_database
-   
+
    # Server
    PORT=3030
-   
+
    # Authentication Microservice
    AUTH_SERVICE_URL=http://localhost:4000
-   
+
    # Email (Gmail)
    EMAIL_USER=your_email@gmail.com
    EMAIL_PASSWORD=your_app_password
-   
+
    # Admin Password
    ADMIN_PASSWORD=your_admin_password
    ```
 
 4. **Set up the database:**
-   
+
    **For new installations:**
-   
+
    Create the database and run migrations using Sequelize CLI:
-   
+
    ```bash
    # Create database (if not exists)
    mysql -u your_user -p -e "CREATE DATABASE IF NOT EXISTS your_database;"
-   
+
    # Run all migrations
    npx sequelize-cli db:migrate
    ```
-   
+
    **For existing installations (applying new migrations):**
-   
+
    ```bash
    # Run pending migrations
    npx sequelize-cli db:migrate
    ```
-   
+
    **Rollback migrations (if needed):**
-   
+
    ```bash
    # Undo last migration
    npx sequelize-cli db:migrate:undo
-   
+
    # Undo all migrations
    npx sequelize-cli db:migrate:undo:all
    ```
-   
+
    Make sure the credentials in `.env` are correct before running migrations.
 
 5. **Configure Gmail (optional for notifications):**
@@ -306,11 +298,11 @@ The suggested structure for pull request descriptions and the content to include
 ### Example:
 
 **Title**
-  
+
 feat: Decoupled Email Architecture with Gmail Support
 
 **Description**
-  
+
 Implemented a decoupled architecture for email services.
 Created the IEmailService interface to define the email service contract.
 Implemented GmailEmailService with credential validation and email sending.
@@ -353,14 +345,6 @@ npm run lint
 npm run lint:fix
 ```
 
-### Email Service Demo
-```powershell
-# Test the new email architecture
-node demo-email-service.js
-
-# Email integration tests
-node test-email-integration.js
-```
 
 ## Testing
 To run the tests:
@@ -377,7 +361,7 @@ npm test
 - **ejs** - Template engine
 - **axios** - HTTP client
 - **dotenv** - Environment variable management
-- **nodemailer** - Email sending
+- **kafkajs** - Kafka client for async email notifications
 
 ### Development and Testing
 - **jest** - Testing framework
