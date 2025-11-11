@@ -12,7 +12,7 @@ exports.login = async (req, res) => {
         }
 
         const result = await authService.login(username, password);
-        
+
         if (result.success) {
             res.status(result.statusCode).json({
                 success: true,
@@ -26,7 +26,7 @@ exports.login = async (req, res) => {
             });
         }
     } catch (error) {
-        console.error('Error in login controller:', error);
+        console.error('[ERROR] Error in login controller:', error.message);
         res.status(500).json({
             success: false,
             message: 'Error interno del servidor'
@@ -46,7 +46,7 @@ exports.validateSession = async (req, res) => {
         }
 
         const result = await authService.validateSession(username);
-        
+
         if (result.success) {
             res.status(result.statusCode).json({
                 success: true,
@@ -60,7 +60,7 @@ exports.validateSession = async (req, res) => {
             });
         }
     } catch (error) {
-        console.error('Error in validateSession controller:', error);
+        console.error('[ERROR] Error in validateSession controller:', error.message);
         res.status(500).json({
             success: false,
             message: 'Error interno del servidor'
@@ -80,7 +80,7 @@ exports.logout = async (req, res) => {
         }
 
         const result = await authService.logout(username);
-        
+
         if (result.success) {
             res.status(result.statusCode).json({
                 success: true,
@@ -93,7 +93,7 @@ exports.logout = async (req, res) => {
             });
         }
     } catch (error) {
-        console.error('Error in logout controller:', error);
+        console.error('[ERROR] Error in logout controller:', error.message);
         res.status(500).json({
             success: false,
             message: 'Error interno del servidor'
