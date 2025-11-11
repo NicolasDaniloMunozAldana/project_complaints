@@ -1,5 +1,6 @@
 
 const complaintsService = require('../services/complaintService');
+const EmailPublisherService = require('../services/EmailPublisherService');
 
 /**
  * Helper function para renderizar home con entidades y alert
@@ -9,7 +10,7 @@ const complaintsService = require('../services/complaintService');
 const renderHomeWithAlert = async (res, alert) => {
     try {
         const entitiesResult = await complaintsService.getAllEntities();
-        
+
         if (entitiesResult.success) {
             res.render('home', {
                 entitys: entitiesResult.data,

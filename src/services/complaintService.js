@@ -3,6 +3,11 @@ const entitiesRepository = require('../repositories/entitiesRepository');
 const commentsRepository = require('../repositories/commentsRepository');
 const complaintsValidator = require('../validators/complaintsValidator');
 const authService = require('./authService');
+const EmailPublisherService = require('./EmailPublisherService');
+const {
+  getEmailRecipientsFromEnv,
+  prepareComplaintData,
+} = require('../utils/emailHelpers');
 
 class ComplaintsService {
     /**
@@ -36,6 +41,16 @@ class ComplaintsService {
             // Crear la queja
             const complaintId = await complaintsRepository.create(validation.data);
 
+            // Obtener datos completos de la queja para el email
+            const complaint = await complaintsRepository.findById(complaintId);
+
+            // Enviar notificación por email (asíncrono, no bloquea la respuesta)
+            if (complaint && process.env.KAFKA_ENABLED === 'true') {
+                this._sendComplaintNotificationEmail(complaint).catch(error => {
+                    console.error('[ERROR] Failed to send complaint notification email:', error.message);
+                });
+            }
+
             return {
                 success: true,
                 message: 'Queja registrada exitosamente',
@@ -43,7 +58,7 @@ class ComplaintsService {
                 data: { id_complaint: complaintId }
             };
         } catch (error) {
-            console.error('Error creating complaint:', error);
+            console.error('[ERROR] Error creating complaint:', error.message);
             return {
                 success: false,
                 message: 'Error interno al crear la queja',
@@ -73,7 +88,7 @@ class ComplaintsService {
                 statusCode: 200
             };
         } catch (error) {
-            console.error('Error fetching complaints:', error);
+            console.error('[ERROR] Error fetching complaints:', error.message);
             return {
                 success: false,
                 message: 'Error al obtener las quejas',
@@ -98,7 +113,7 @@ class ComplaintsService {
                     message: idValidation.message,
                     statusCode: idValidation.statusCode
                 };
-            }   
+            }
 
             if (!username) {
                 return {
@@ -135,7 +150,7 @@ class ComplaintsService {
                 };
             }
         } catch (error) {
-            console.error('Error deleting complaint:', error);
+            console.error('[ERROR] Error deleting complaint:', error.message);
             return {
                 success: false,
                 message: 'Error interno al eliminar la queja',
@@ -172,7 +187,7 @@ class ComplaintsService {
                     statusCode: statusValidation.statusCode
                 };
             }
-                        
+
             if (!username) {
                 return {
                     success: false,
@@ -195,6 +210,16 @@ class ComplaintsService {
             const wasUpdated = await complaintsRepository.updateStatus(idValidation.data, complaint_status);
 
             if (wasUpdated) {
+                // Obtener datos completos de la queja actualizada para el email
+                const complaint = await complaintsRepository.findById(idValidation.data);
+
+                // Enviar notificación por email (asíncrono, no bloquea la respuesta)
+                if (complaint && process.env.KAFKA_ENABLED === 'true') {
+                    this._sendComplaintUpdateNotificationEmail(complaint, complaint_status).catch(error => {
+                        console.error('[ERROR] Failed to send complaint update notification email:', error.message);
+                    });
+                }
+
                 return {
                     success: true,
                     message: `Estado de la queja actualizado a: ${complaint_status}`,
@@ -208,7 +233,7 @@ class ComplaintsService {
                 };
             }
         } catch (error) {
-            console.error('Error updating complaint status:', error);
+            console.error('[ERROR] Error updating complaint status:', error.message);
             return {
                 success: false,
                 message: 'Error interno al actualizar el estado de la queja',
@@ -237,7 +262,7 @@ class ComplaintsService {
                 statusCode: 200
             };
         } catch (error) {
-            console.error('Error fetching complaints stats:', error);
+            console.error('[ERROR] Error fetching complaints stats:', error.message);
             return {
                 success: false,
                 message: 'Error al obtener las estadísticas',
@@ -259,7 +284,7 @@ class ComplaintsService {
                 statusCode: 200
             };
         } catch (error) {
-            console.error('Error fetching entities:', error);
+            console.error('[ERROR] Error fetching entities:', error.message);
             return {
                 success: false,
                 message: 'Error al obtener las entidades',
@@ -308,7 +333,7 @@ class ComplaintsService {
                 statusCode: 200
             };
         } catch (error) {
-            console.error('Error fetching complaint details:', error);
+            console.error('[ERROR] Error fetching complaint details:', error.message);
             return {
                 success: false,
                 message: 'Error al obtener los detalles de la queja',
@@ -342,7 +367,7 @@ class ComplaintsService {
                 statusCode: 200
             };
         } catch (error) {
-            console.error('Error fetching comments:', error);
+            console.error('[ERROR] Error fetching comments:', error.message);
             return {
                 success: false,
                 message: 'Error al obtener los comentarios',
@@ -389,12 +414,69 @@ class ComplaintsService {
                 data: { id_comment: commentId }
             };
         } catch (error) {
-            console.error('Error adding comment:', error);
+            console.error('[ERROR] Error adding comment:', error.message);
             return {
                 success: false,
                 message: 'Error interno al agregar el comentario',
                 statusCode: 500
             };
+        }
+    }
+
+    /**
+     * Enviar notificación de nueva queja por email
+     * @private
+     * @param {Object} complaint - Datos de la queja
+     * @returns {Promise<void>}
+     */
+    async _sendComplaintNotificationEmail(complaint) {
+        try {
+            const emailPublisher = EmailPublisherService.getInstance();
+            const complaintData = prepareComplaintData(complaint);
+            const { recipients, ccRecipients } = getEmailRecipientsFromEnv();
+
+            if (recipients.length > 0) {
+                await emailPublisher.publishComplaintNotification(
+                    complaintData,
+                    recipients,
+                    ccRecipients,
+                );
+            }
+        } catch (error) {
+            console.error(
+                '[ERROR] Error in _sendComplaintNotificationEmail:',
+                error.message,
+            );
+            // No lanzar error para no afectar el flujo principal
+        }
+    }
+
+    /**
+     * Enviar notificación de actualización de queja por email
+     * @private
+     * @param {Object} complaint - Datos de la queja
+     * @param {string} newStatus - Nuevo estado
+     * @returns {Promise<void>}
+     */
+    async _sendComplaintUpdateNotificationEmail(complaint, newStatus) {
+        try {
+            const emailPublisher = EmailPublisherService.getInstance();
+            const complaintData = prepareComplaintData(complaint, newStatus);
+            const { recipients, ccRecipients } = getEmailRecipientsFromEnv();
+
+            if (recipients.length > 0) {
+                await emailPublisher.publishComplaintUpdateNotification(
+                    complaintData,
+                    recipients,
+                    ccRecipients,
+                );
+            }
+        } catch (error) {
+            console.error(
+                '[ERROR] Error in _sendComplaintUpdateNotificationEmail:',
+                error.message,
+            );
+            // No lanzar error para no afectar el flujo principal
         }
     }
 }
