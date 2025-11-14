@@ -409,3 +409,137 @@ describe('Complaints Business Logic Tests', () => {
     });
   });
 });
+
+// ============================================================
+// ANONYMOUS COMMENTS BUSINESS LOGIC TESTS
+// ============================================================
+describe('Anonymous Comments Business Logic Tests', () => {
+  
+  describe('Comment Data Validation', () => {
+    
+    test('should validate that complaint ID and comment text are required', () => {
+      const result1 = complaintsValidator.validateCommentData(null, 'Valid comment text here');
+      const result2 = complaintsValidator.validateCommentData('1', null);
+      const result3 = complaintsValidator.validateCommentData('', '');
+
+      expect(result1.isValid).toBe(false);
+      expect(result1.message).toContain('requerido');
+      expect(result1.statusCode).toBe(400);
+
+      expect(result2.isValid).toBe(false);
+      expect(result3.isValid).toBe(false);
+    });
+
+    test('should validate complaint ID must be numeric for comments', () => {
+      const validResult = complaintsValidator.validateCommentData('123', 'Valid comment text here');
+      const invalidResult = complaintsValidator.validateCommentData('abc', 'Valid comment text');
+
+      expect(validResult.isValid).toBe(true);
+      expect(validResult.data.id_complaint).toBe(123);
+
+      expect(invalidResult.isValid).toBe(false);
+      expect(invalidResult.message).toContain('número válido');
+    });
+
+    test('should accept valid comment data', () => {
+      const result = complaintsValidator.validateCommentData('10', 'This is a valid anonymous comment');
+
+      expect(result.isValid).toBe(true);
+      expect(result.data.id_complaint).toBe(10);
+      expect(result.data.comment_text).toBe('This is a valid anonymous comment');
+    });
+  });
+
+  describe('Comment Text Validation', () => {
+    
+    test('should validate minimum comment length (10 characters)', () => {
+      const tooShort = complaintsValidator.validateCommentData('1', 'Short');
+      const exactlyTen = complaintsValidator.validateCommentData('1', '1234567890');
+      const valid = complaintsValidator.validateCommentData('1', 'This is valid comment');
+
+      expect(tooShort.isValid).toBe(false);
+      expect(tooShort.message).toContain('al menos 10 caracteres');
+
+      expect(exactlyTen.isValid).toBe(true);
+      expect(valid.isValid).toBe(true);
+    });
+
+    test('should validate maximum comment length (500 characters)', () => {
+      const tooLong = 'a'.repeat(501);
+      const exactly500 = 'a'.repeat(500);
+
+      const result1 = complaintsValidator.validateCommentData('1', tooLong);
+      const result2 = complaintsValidator.validateCommentData('1', exactly500);
+
+      expect(result1.isValid).toBe(false);
+      expect(result1.message).toContain('no puede exceder 500 caracteres');
+
+      expect(result2.isValid).toBe(true);
+    });
+
+    test('should trim whitespace from comment text', () => {
+      const result = complaintsValidator.validateCommentData('1', '  Valid comment text  ');
+      
+      expect(result.isValid).toBe(true);
+      expect(result.data.comment_text).toBe('Valid comment text');
+    });
+  });
+
+  describe('Comment-Complaint Association', () => {
+    
+    test('should allow multiple comments for same complaint ID', () => {
+      const comment1 = complaintsValidator.validateCommentData('5', 'First comment for complaint 5');
+      const comment2 = complaintsValidator.validateCommentData('5', 'Second comment for complaint 5');
+
+      expect(comment1.isValid).toBe(true);
+      expect(comment2.isValid).toBe(true);
+      expect(comment1.data.id_complaint).toBe(5);
+      expect(comment2.data.id_complaint).toBe(5);
+    });
+  });
+
+  describe('Business Rules Enforcement', () => {
+    
+    test('should ensure anonymity by not requiring user identification', () => {
+      const result = complaintsValidator.validateCommentData('1', 'Anonymous comment text here');
+      
+      expect(result.isValid).toBe(true);
+      expect(result.data).not.toHaveProperty('user_id');
+      expect(Object.keys(result.data)).toEqual(['id_complaint', 'comment_text']);
+    });
+
+    test('should ensure all validation responses have consistent structure', () => {
+      const validResult = complaintsValidator.validateCommentData('1', 'Valid comment text');
+      const invalidResult = complaintsValidator.validateCommentData('', '');
+
+      expect(validResult).toHaveProperty('isValid');
+      expect(validResult).toHaveProperty('data');
+      expect(validResult.isValid).toBe(true);
+
+      expect(invalidResult).toHaveProperty('isValid');
+      expect(invalidResult).toHaveProperty('message');
+      expect(invalidResult).toHaveProperty('statusCode');
+      expect(invalidResult.isValid).toBe(false);
+    });
+  });
+
+  describe('Edge Cases', () => {
+    
+    test('should handle special characters in comment text', () => {
+      const specialChars = 'Comment with chars: !@#$%^&*()_+-=[]';
+      const result = complaintsValidator.validateCommentData('1', specialChars);
+
+      expect(result.isValid).toBe(true);
+      expect(result.data.comment_text).toContain('!@#$');
+    });
+
+    test('should handle unicode characters in comment text', () => {
+      const unicode = 'Comentario con ñ, tildes áéíóú y emojis 😀';
+      const result = complaintsValidator.validateCommentData('1', unicode);
+
+      expect(result.isValid).toBe(true);
+      expect(result.data.comment_text).toContain('ñ');
+      expect(result.data.comment_text).toContain('😀');
+    });
+  });
+});
