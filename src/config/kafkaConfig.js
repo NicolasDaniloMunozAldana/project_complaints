@@ -60,11 +60,16 @@ module.exports = {
     compression: getEnvInt('KAFKA_COMPRESSION', 1), // 1 = Gzip for better performance
   },
 
-  // Topic Definitions - Only for Email Notifications
+  // Topic Definitions
   topics: {
+    // Email notifications topic
     emailNotifications:
       process.env.KAFKA_TOPIC_EMAIL_NOTIFICATIONS || 'email-notifications',
     emailDLQ: process.env.KAFKA_TOPIC_EMAIL_DLQ || 'email-dlq',
+    
+    // Event sourcing topic for complaint status changes (historical)
+    complaintStatusEvents:
+      process.env.KAFKA_TOPIC_COMPLAINT_STATUS_EVENTS || 'complaint-status-events',
   },
 
   // Retry Policy for Email Publishing
