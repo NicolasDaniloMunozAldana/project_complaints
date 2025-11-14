@@ -4,6 +4,7 @@ const commentsRepository = require('../repositories/commentsRepository');
 const complaintsValidator = require('../validators/complaintsValidator');
 const authService = require('./authService');
 const EmailPublisherService = require('./EmailPublisherService');
+const { getPublisherInstance } = require('./ComplaintStatusEventPublisher');
 const {
   getEmailRecipientsFromEnv,
   prepareComplaintData,
@@ -43,6 +44,19 @@ class ComplaintsService {
 
             // Obtener datos completos de la queja para el email
             const complaint = await complaintsRepository.findById(complaintId);
+
+            // Publicar evento de creación de queja (Event Sourcing)
+            if (process.env.KAFKA_ENABLED === 'true') {
+                this._publishStatusChangeEvent(
+                    complaintId,
+                    null,
+                    'abierta',
+                    'system',
+                    'Queja creada'
+                ).catch(error => {
+                    console.error('[ERROR] Failed to publish status change event:', error.message);
+                });
+            }
 
             // Enviar notificación por email (asíncrono, no bloquea la respuesta)
             if (complaint && process.env.KAFKA_ENABLED === 'true') {
@@ -206,10 +220,27 @@ class ComplaintsService {
                 };
             }
 
+            // Obtener el estado actual antes de actualizar
+            const currentComplaint = await complaintsRepository.findById(idValidation.data);
+            const previousStatus = currentComplaint ? currentComplaint.complaint_status : null;
+
             // Actualizar el estado
             const wasUpdated = await complaintsRepository.updateStatus(idValidation.data, complaint_status);
 
             if (wasUpdated) {
+                // Publicar evento de cambio de estado (Event Sourcing)
+                if (process.env.KAFKA_ENABLED === 'true') {
+                    this._publishStatusChangeEvent(
+                        idValidation.data,
+                        previousStatus,
+                        complaint_status,
+                        username,
+                        `Estado cambiado de ${previousStatus} a ${complaint_status}`
+                    ).catch(error => {
+                        console.error('[ERROR] Failed to publish status change event:', error.message);
+                    });
+                }
+
                 // Obtener datos completos de la queja actualizada para el email
                 const complaint = await complaintsRepository.findById(idValidation.data);
 
@@ -474,6 +505,35 @@ class ComplaintsService {
         } catch (error) {
             console.error(
                 '[ERROR] Error in _sendComplaintUpdateNotificationEmail:',
+                error.message,
+            );
+            // No lanzar error para no afectar el flujo principal
+        }
+    }
+
+    /**
+     * Publicar evento de cambio de estado para Event Sourcing
+     * @private
+     * @param {number} id_complaint - ID de la queja
+     * @param {string|null} previous_status - Estado anterior
+     * @param {string} new_status - Nuevo estado
+     * @param {string} changed_by - Usuario que realizó el cambio
+     * @param {string} change_description - Descripción del cambio
+     * @returns {Promise<void>}
+     */
+    async _publishStatusChangeEvent(id_complaint, previous_status, new_status, changed_by, change_description) {
+        try {
+            const eventPublisher = getPublisherInstance();
+            await eventPublisher.publishStatusChangeEvent({
+                id_complaint,
+                previous_status,
+                new_status,
+                changed_by,
+                change_description,
+            });
+        } catch (error) {
+            console.error(
+                '[ERROR] Error in _publishStatusChangeEvent:',
                 error.message,
             );
             // No lanzar error para no afectar el flujo principal

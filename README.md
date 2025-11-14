@@ -17,6 +17,7 @@ For a detailed history of changes, new features, and fixes across all versions, 
 - **Dynamic Views**: EJS templates for the frontend.
 - **Authentication Microservice Integration**: Consumes an external authentication microservice for user login, session validation, and logout.
 - **Email Notifications**: Asynchronous email notifications via Kafka to external email service.
+- **Event Sourcing**: Complete historical tracking of complaint status changes via Kafka streaming.
 - **Testing**: Complete test suite using Jest and Supertest.
 - **Linting**: ESLint configuration for code quality.
 - **CI/CD**: GitHub Actions workflow for continuous integration.
@@ -32,6 +33,27 @@ The project publishes email notification events to Kafka, which are consumed and
 - **Separation of concerns**: Email logic is isolated in a dedicated service
 
 The application publishes events to the `email-notifications` Kafka topic when complaints are created or updated. The actual email sending is handled by the `project_email_sender` microservice.
+
+## Event Sourcing for Historical Tracking
+
+The project implements **Event Sourcing** to maintain a complete, immutable history of all complaint status changes. Every time a complaint's status changes, an event is published to Kafka and consumed by the `project_historical` service.
+
+### Architecture
+
+- **Producer**: `ComplaintStatusEventPublisher` publishes status change events to the `complaint-status-events` Kafka topic
+- **Consumer**: `project_historical` service consumes these events and stores them in `historical.complaint_status_history`
+- **Streaming**: The consumer can replay all events from the beginning (`fromBeginning: true`)
+- **Audit Trail**: Every change includes: complaint ID, previous status, new status, user who made the change, timestamp, and description
+
+### Benefits
+
+- **Complete audit trail**: Know exactly when and by whom each status change was made
+- **Historical reconstruction**: Rebuild the state of any complaint at any point in time
+- **Temporal queries**: Analyze how long complaints stayed in each status
+- **Event replay**: Recover from failures by replaying all events
+- **Immutable log**: Events are never modified or deleted
+
+See `project_historical/ARCHITECTURE.md` for detailed documentation.
 
 ## Authentication Microservice Integration
 
