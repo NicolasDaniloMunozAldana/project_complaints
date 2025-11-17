@@ -18,6 +18,8 @@ For a detailed history of changes, new features, and fixes across all versions, 
 - **Authentication Microservice Integration**: Consumes an external authentication microservice for user login, session validation, and logout.
 - **Email Notifications**: Asynchronous email notifications via Kafka to external email service.
 - **Event Sourcing**: Complete historical tracking of complaint status changes via Kafka streaming.
+- **End-to-End Traceability**: Correlation IDs and centralized logging for tracking operations across microservices.
+- **Log Viewer Dashboard**: Web-based interface for viewing, filtering, and analyzing application logs in real-time.
 - **Testing**: Complete test suite using Jest and Supertest.
 - **Linting**: ESLint configuration for code quality.
 - **CI/CD**: GitHub Actions workflow for continuous integration.
@@ -106,7 +108,8 @@ project_complaints/
 │   ├── controllers/            # MVC controllers
 │   │   ├── authController.js
 │   │   ├── complaintsController.js
-│   │   └── homeController.js
+│   │   ├── homeController.js
+│   │   └── logViewerController.js  # Log viewer API
 │   ├── models/                 # Sequelize data models
 │   │   ├── comment.js
 │   │   ├── complaint.js
@@ -120,26 +123,68 @@ project_complaints/
 │   │   ├── authRoutes.js
 │   │   ├── complaintsRoutes.js
 │   │   ├── homeRoutes.js
-│   │   └── loginRoutes.js
+│   │   ├── loginRoutes.js
+│   │   └── logViewerRoutes.js  # Log viewer routes
 │   ├── services/               # Business services
 │   │   ├── authService.js      # Auth microservice integration
 │   │   ├── complaintService.js # Complaint business logic
 │   │   ├── EmailPublisherService.js  # Kafka email publisher
-│   │   └── KafkaProducerService.js   # Kafka producer
+│   │   ├── emailQueueService.js      # Email microservice client
+│   │   ├── KafkaProducerService.js   # Kafka producer
+│   │   └── logViewerService.js       # Log reading and parsing
+│   ├── middlewares/            # Express middlewares
+│   │   └── correlationId.js    # Correlation ID tracking
 │   ├── utils/                  # Utilities
-│   │   └── emailHelpers.js     # Email helper functions
+│   │   ├── emailHelpers.js     # Email helper functions
+│   │   └── logger.js           # Winston logger
 │   ├── validators/             # Input validation layer
 │   │   └── complaintsValidator.js
 │   └── views/                  # EJS templates
 │       ├── complaints_list.ejs
 │       ├── complaints_stats.ejs
-│       └── home.ejs
+│       ├── home.ejs
+│       └── log_viewer.ejs      # Log viewer dashboard
+├── logs/                       # Application logs (auto-rotated)
 ├── test/
 │   └── app.test.js             # Test suite
 └── .github/
     └── workflows/
         └── test.yml            # GitHub Actions CI/CD
 ```
+
+## Logging and Traceability
+
+This project implements comprehensive logging with end-to-end traceability using **Correlation IDs** and **Winston**. Each request is tracked from the frontend through multiple microservices.
+
+### Documentation
+
+- **[LOGGING.md](./LOGGING.md)** - Complete logging system documentation
+- **[TRACEABILITY_GUIDE.md](./TRACEABILITY_GUIDE.md)** - Guide for implementing traceability across microservices
+- **[MICROSERVICE_EVENT_SOURCING.md](./MICROSERVICE_EVENT_SOURCING.md)** - Event Sourcing microservice setup
+- **[MICROSERVICE_EMAIL.md](./MICROSERVICE_EMAIL.md)** - Email microservice setup
+
+### Key Features
+
+- **Correlation IDs**: Unique identifiers for tracking requests across services
+- **Structured Logging**: JSON logs with context and timestamps
+- **Auto-rotation**: Daily log files with automatic cleanup
+- **Microservice Support**: HTTP clients propagate correlation IDs to external services
+- **Event Sourcing Integration**: Logs communication with event sourcing service
+- **Email Queue Integration**: Tracks email requests to email microservice
+
+### Log Viewer Dashboard
+
+Access the log viewer at `/logs` to:
+
+- **View Logs**: Browse all application logs with syntax highlighting
+- **Filter by Level**: Show only errors, warnings, info, or debug logs
+- **Search**: Find logs by message content, service name, or operation
+- **Track Requests**: Search by correlation ID to trace requests across microservices
+- **Statistics**: View log counts by level and service
+- **Auto-refresh**: Dashboard updates every 30 seconds
+- **Pagination**: Navigate through large log files efficiently
+
+The dashboard provides a user-friendly interface for monitoring and troubleshooting the application without needing command-line access to log files.
 
 ## Naming Conventions
 

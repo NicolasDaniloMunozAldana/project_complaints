@@ -5,9 +5,13 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const app = express();
+const correlationIdMiddleware = require('./middlewares/correlationId');
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Middleware para correlation ID (debe ir antes de las rutas)
+app.use(correlationIdMiddleware);
 
 // (Knex removed, now using Sequelize models directly in repositories/services)
 
@@ -20,11 +24,13 @@ const homeRoutes = require('./routes/homeRoutes');
 const complaintsRoutes = require('./routes/complaintsRoutes');
 const authRoutes = require('./routes/authRoutes');
 const loginRoutes = require('./routes/loginRoutes');
+const logViewerRoutes = require('./routes/logViewerRoutes');
 
 app.use('/', homeRoutes);
 app.use('/complaints', complaintsRoutes);
 app.use('/auth', authRoutes);
 app.use('/', loginRoutes);
+app.use('/logs', logViewerRoutes);
 
 // Importar constantes
 const { DEFAULT_PORT } = require('./config/constants');
