@@ -93,17 +93,25 @@ class KafkaProducerService {
         ...(emailData.action && { action: emailData.action }),
       };
 
+      const headers = {
+        'event-type': EMAIL_EVENT_TYPES.NOTIFICATION,
+        source: EMAIL_CONFIG.DEFAULT_SOURCE,
+        priority: emailData.priority || EMAIL_CONFIG.DEFAULT_PRIORITY,
+      };
+
+      // Agregar correlation ID al header si está disponible
+      if (emailData.correlationId) {
+        headers['x-correlation-id'] = emailData.correlationId;
+        messageValue.correlationId = emailData.correlationId;
+      }
+
       await this.producer.send({
         topic: kafkaConfig.topics.emailNotifications,
         messages: [
           {
             key: `email-${emailData.id}`,
             value: JSON.stringify(messageValue),
-            headers: {
-              'event-type': EMAIL_EVENT_TYPES.NOTIFICATION,
-              source: EMAIL_CONFIG.DEFAULT_SOURCE,
-              priority: emailData.priority || EMAIL_CONFIG.DEFAULT_PRIORITY,
-            },
+            headers,
           },
         ],
       });
