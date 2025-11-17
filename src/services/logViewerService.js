@@ -40,7 +40,7 @@ class LogViewerService {
   /**
    * Read and parse log entries from a file
    * @param {string} filename - Name of the log file
-   * @param {object} filters - Filters to apply (level, correlationId, search, limit)
+   * @param {object} filters - Filters to apply (level, correlationId, search, limit, reverse)
    */
   async readLogs(filename, filters = {}) {
     const {
@@ -48,11 +48,12 @@ class LogViewerService {
       correlationId = null,
       search = null,
       limit = 500,
-      offset = 0
+      offset = 0,
+      reverse = false // Si es true, lee desde el final (logs más recientes primero)
     } = filters;
 
     const filePath = path.join(this.logsDir, filename);
-    const logs = [];
+    let allLogs = [];
     
     try {
       const fileStream = createReadStream(filePath);
@@ -62,9 +63,8 @@ class LogViewerService {
       });
 
       let lineNumber = 0;
-      let matchedLines = 0;
-      let skippedLines = 0;
 
+      // Primero, leer todas las líneas que coincidan con los filtros
       for await (const line of rl) {
         lineNumber++;
         
@@ -81,26 +81,13 @@ class LogViewerService {
             const matchesSearch = 
               (logEntry.message && logEntry.message.toLowerCase().includes(searchLower)) ||
               (logEntry.service && logEntry.service.toLowerCase().includes(searchLower)) ||
-              (logEntry.operation && logEntry.operation.toLowerCase().includes(searchLower)) ||
+              (logEntry.operation && logEntry.operation && logEntry.operation.toLowerCase().includes(searchLower)) ||
               (logEntry.error && JSON.stringify(logEntry.error).toLowerCase().includes(searchLower));
             
             if (!matchesSearch) continue;
           }
 
-          matchedLines++;
-
-          // Apply offset
-          if (skippedLines < offset) {
-            skippedLines++;
-            continue;
-          }
-
-          // Apply limit
-          if (logs.length >= limit) {
-            break;
-          }
-
-          logs.push({
+          allLogs.push({
             ...logEntry,
             lineNumber
           });
@@ -110,10 +97,27 @@ class LogViewerService {
         }
       }
 
+      // Si reverse es true, invertir el orden (logs más recientes primero)
+      if (reverse) {
+        allLogs.reverse();
+      }
+
+      // Ordenar por timestamp si está disponible (más recientes primero)
+      allLogs.sort((a, b) => {
+        const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+        const timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+        return timeB - timeA; // Descendente (más reciente primero)
+      });
+
+      const totalMatched = allLogs.length;
+
+      // Apply offset
+      const logs = allLogs.slice(offset, offset + limit);
+
       return {
         logs,
-        totalMatched: matchedLines,
-        hasMore: matchedLines > (offset + limit)
+        totalMatched,
+        hasMore: totalMatched > (offset + limit)
       };
     } catch (error) {
       console.error('Error reading log file:', error);

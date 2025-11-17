@@ -125,6 +125,53 @@ const logEventSourcing = (eventType, aggregateId, eventData, correlationId = nul
     });
 };
 
+/**
+ * Logger específico para eventos de negocio (trazabilidad)
+ * Incluye información estructurada para seguimiento end-to-end
+ */
+const logBusinessEvent = (eventType, eventData, correlationId = null, service = 'main-service') => {
+    logWithContext('info', `BUSINESS_EVENT: ${eventType}`, {
+        eventType,
+        correlationId,
+        service,
+        businessEvent: true, // Flag para identificar eventos de negocio
+        eventData: {
+            ...eventData,
+            timestamp: new Date().toISOString()
+        },
+        timestamp: new Date().toISOString()
+    });
+};
+
+/**
+ * Logger para eventos de Kafka (producer/consumer)
+ */
+const logKafkaEvent = (action, topic, eventData, correlationId = null) => {
+    logWithContext('info', `Kafka ${action}: ${topic}`, {
+        action, // 'PRODUCED' o 'CONSUMED'
+        topic,
+        correlationId,
+        kafkaEvent: true,
+        eventData,
+        timestamp: new Date().toISOString()
+    });
+};
+
+/**
+ * Logger para comunicación HTTP entre microservicios
+ */
+const logMicroserviceCall = (action, service, endpoint, eventData, correlationId = null) => {
+    logWithContext('info', `Microservice ${action}: ${service}${endpoint}`, {
+        action, // 'CALL' o 'RESPONSE'
+        service,
+        endpoint,
+        correlationId,
+        microserviceCall: true,
+        eventData,
+        timestamp: new Date().toISOString()
+    });
+};
+
 module.exports = {
     logger,
     logWithContext,
@@ -132,5 +179,8 @@ module.exports = {
     logError,
     logDatabaseOperation,
     logMessageQueue,
-    logEventSourcing
+    logEventSourcing,
+    logBusinessEvent,
+    logKafkaEvent,
+    logMicroserviceCall
 };

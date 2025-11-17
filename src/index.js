@@ -24,13 +24,13 @@ const homeRoutes = require('./routes/homeRoutes');
 const complaintsRoutes = require('./routes/complaintsRoutes');
 const authRoutes = require('./routes/authRoutes');
 const loginRoutes = require('./routes/loginRoutes');
-const logViewerRoutes = require('./routes/logViewerRoutes');
+const logsRoutes = require('./routes/logsRoutes');
 
 app.use('/', homeRoutes);
 app.use('/complaints', complaintsRoutes);
 app.use('/auth', authRoutes);
 app.use('/', loginRoutes);
-app.use('/logs', logViewerRoutes);
+app.use('/logs', logsRoutes);
 
 // Importar constantes
 const { DEFAULT_PORT } = require('./config/constants');

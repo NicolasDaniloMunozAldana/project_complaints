@@ -9,19 +9,29 @@ const {
   getEmailRecipientsFromEnv,
   prepareComplaintData,
 } = require('../utils/emailHelpers');
+const { logBusinessEvent, logError, logDatabaseOperation } = require('../utils/logger');
 
 class ComplaintsService {
     /**
      * Crear una nueva queja
      * @param {string|number} entity - ID de la entidad
      * @param {string} description - Descripción de la queja
+     * @param {string} correlationId - ID de correlación para trazabilidad
      * @returns {Promise<Object>} Resultado de la operación
      */
-    async createComplaint(entity, description) {
+    async createComplaint(entity, description, correlationId = null) {
         try {
+            logBusinessEvent('COMPLAINT_CREATE_STARTED', {
+                entity,
+                descriptionLength: description?.length || 0
+            }, correlationId);
+
             // Validar datos de entrada
             const validation = complaintsValidator.validateComplaintData(entity, description);
             if (!validation.isValid) {
+                logBusinessEvent('COMPLAINT_CREATE_VALIDATION_FAILED', {
+                    reason: validation.message
+                }, correlationId);
                 return {
                     success: false,
                     message: validation.message,
@@ -32,6 +42,9 @@ class ComplaintsService {
             // Verificar que la entidad existe
             const entityExists = await entitiesRepository.exists(validation.data.id_public_entity);
             if (!entityExists) {
+                logBusinessEvent('COMPLAINT_CREATE_ENTITY_NOT_FOUND', {
+                    entityId: validation.data.id_public_entity
+                }, correlationId);
                 return {
                     success: false,
                     message: 'La entidad pública especificada no existe',
@@ -41,6 +54,12 @@ class ComplaintsService {
 
             // Crear la queja
             const complaintId = await complaintsRepository.create(validation.data);
+            logDatabaseOperation('INSERT', 'complaints', { complaintId }, correlationId);
+            logBusinessEvent('COMPLAINT_CREATED', {
+                complaintId,
+                entityId: validation.data.id_public_entity,
+                status: 'abierta'
+            }, correlationId);
 
             // Obtener datos completos de la queja para el email
             const complaint = await complaintsRepository.findById(complaintId);
@@ -52,18 +71,23 @@ class ComplaintsService {
                     null,
                     'abierta',
                     'system',
-                    'Queja creada'
+                    'Queja creada',
+                    correlationId
                 ).catch(error => {
-                    console.error('[ERROR] Failed to publish status change event:', error.message);
+                    logError(error, { operation: 'publishStatusChangeEvent', complaintId }, correlationId);
                 });
             }
 
             // Enviar notificación por email (asíncrono, no bloquea la respuesta)
             if (complaint && process.env.KAFKA_ENABLED === 'true') {
-                this._sendComplaintNotificationEmail(complaint).catch(error => {
-                    console.error('[ERROR] Failed to send complaint notification email:', error.message);
+                this._sendComplaintNotificationEmail(complaint, correlationId).catch(error => {
+                    logError(error, { operation: 'sendComplaintNotificationEmail', complaintId }, correlationId);
                 });
             }
+
+            logBusinessEvent('COMPLAINT_CREATE_SUCCESS', {
+                complaintId
+            }, correlationId);
 
             return {
                 success: true,
@@ -72,7 +96,7 @@ class ComplaintsService {
                 data: { id_complaint: complaintId }
             };
         } catch (error) {
-            console.error('[ERROR] Error creating complaint:', error.message);
+            logError(error, { operation: 'createComplaint', entity, description }, correlationId);
             return {
                 success: false,
                 message: 'Error interno al crear la queja',
@@ -178,13 +202,24 @@ class ComplaintsService {
      * @param {string|number} id_complaint - ID de la queja
      * @param {string} complaint_status - Nuevo estado
      * @param {string} username - Nombre del usuario que realiza la acción
+     * @param {string} correlationId - ID de correlación para trazabilidad
      * @returns {Promise<Object>} Resultado de la operación
      */
-    async updateComplaintStatus(id_complaint, complaint_status, username) {
+    async updateComplaintStatus(id_complaint, complaint_status, username, correlationId = null) {
         try {
+            logBusinessEvent('COMPLAINT_STATUS_UPDATE_STARTED', {
+                complaintId: id_complaint,
+                newStatus: complaint_status,
+                username
+            }, correlationId);
+
             // Validar ID de queja
             const idValidation = complaintsValidator.validateComplaintId(id_complaint);
             if (!idValidation.isValid) {
+                logBusinessEvent('COMPLAINT_STATUS_UPDATE_VALIDATION_FAILED', {
+                    reason: idValidation.message,
+                    complaintId: id_complaint
+                }, correlationId);
                 return {
                     success: false,
                     message: idValidation.message,
@@ -195,6 +230,10 @@ class ComplaintsService {
             // Validar estado
             const statusValidation = complaintsValidator.validateComplaintStatus(complaint_status);
             if (!statusValidation.isValid) {
+                logBusinessEvent('COMPLAINT_STATUS_UPDATE_VALIDATION_FAILED', {
+                    reason: statusValidation.message,
+                    complaintId: idValidation.data
+                }, correlationId);
                 return {
                     success: false,
                     message: statusValidation.message,
@@ -203,6 +242,10 @@ class ComplaintsService {
             }
 
             if (!username) {
+                logBusinessEvent('COMPLAINT_STATUS_UPDATE_VALIDATION_FAILED', {
+                    reason: 'Usuario requerido',
+                    complaintId: idValidation.data
+                }, correlationId);
                 return {
                     success: false,
                     message: 'Se requiere un usuario para realizar esta acción',
@@ -213,6 +256,10 @@ class ComplaintsService {
             // Validar sesión activa del usuario
             const sessionValidation = await authService.validateSession(username);
             if (!sessionValidation.success || !sessionValidation.data?.isActive) {
+                logBusinessEvent('COMPLAINT_STATUS_UPDATE_SESSION_INVALID', {
+                    username,
+                    complaintId: idValidation.data
+                }, correlationId);
                 return {
                     success: false,
                     message: 'Sesión inactiva. Por favor, inicie sesión nuevamente.',
@@ -228,6 +275,19 @@ class ComplaintsService {
             const wasUpdated = await complaintsRepository.updateStatus(idValidation.data, complaint_status);
 
             if (wasUpdated) {
+                logDatabaseOperation('UPDATE', 'complaints', {
+                    complaintId: idValidation.data,
+                    previousStatus,
+                    newStatus: complaint_status
+                }, correlationId);
+
+                logBusinessEvent('COMPLAINT_STATUS_UPDATED', {
+                    complaintId: idValidation.data,
+                    previousStatus,
+                    newStatus: complaint_status,
+                    changedBy: username
+                }, correlationId);
+
                 // Publicar evento de cambio de estado (Event Sourcing)
                 if (process.env.KAFKA_ENABLED === 'true') {
                     this._publishStatusChangeEvent(
@@ -235,9 +295,10 @@ class ComplaintsService {
                         previousStatus,
                         complaint_status,
                         username,
-                        `Estado cambiado de ${previousStatus} a ${complaint_status}`
+                        `Estado cambiado de ${previousStatus} a ${complaint_status}`,
+                        correlationId
                     ).catch(error => {
-                        console.error('[ERROR] Failed to publish status change event:', error.message);
+                        logError(error, { operation: 'publishStatusChangeEvent', complaintId: idValidation.data }, correlationId);
                     });
                 }
 
@@ -246,10 +307,15 @@ class ComplaintsService {
 
                 // Enviar notificación por email (asíncrono, no bloquea la respuesta)
                 if (complaint && process.env.KAFKA_ENABLED === 'true') {
-                    this._sendComplaintUpdateNotificationEmail(complaint, complaint_status).catch(error => {
-                        console.error('[ERROR] Failed to send complaint update notification email:', error.message);
+                    this._sendComplaintUpdateNotificationEmail(complaint, complaint_status, correlationId).catch(error => {
+                        logError(error, { operation: 'sendComplaintUpdateNotificationEmail', complaintId: idValidation.data }, correlationId);
                     });
                 }
+
+                logBusinessEvent('COMPLAINT_STATUS_UPDATE_SUCCESS', {
+                    complaintId: idValidation.data,
+                    newStatus: complaint_status
+                }, correlationId);
 
                 return {
                     success: true,
@@ -257,6 +323,9 @@ class ComplaintsService {
                     statusCode: 200
                 };
             } else {
+                logBusinessEvent('COMPLAINT_STATUS_UPDATE_NOT_FOUND', {
+                    complaintId: idValidation.data
+                }, correlationId);
                 return {
                     success: false,
                     message: 'Queja no encontrada',
@@ -264,7 +333,7 @@ class ComplaintsService {
                 };
             }
         } catch (error) {
-            console.error('[ERROR] Error updating complaint status:', error.message);
+            logError(error, { operation: 'updateComplaintStatus', complaintId: id_complaint, status: complaint_status }, correlationId);
             return {
                 success: false,
                 message: 'Error interno al actualizar el estado de la queja',
@@ -458,10 +527,16 @@ class ComplaintsService {
      * Enviar notificación de nueva queja por email
      * @private
      * @param {Object} complaint - Datos de la queja
+     * @param {string} correlationId - ID de correlación
      * @returns {Promise<void>}
      */
-    async _sendComplaintNotificationEmail(complaint) {
+    async _sendComplaintNotificationEmail(complaint, correlationId = null) {
         try {
+            logBusinessEvent('EMAIL_NOTIFICATION_STARTED', {
+                type: 'COMPLAINT_CREATED',
+                complaintId: complaint.id_complaint
+            }, correlationId);
+
             const emailPublisher = EmailPublisherService.getInstance();
             const complaintData = prepareComplaintData(complaint);
             const { recipients, ccRecipients } = getEmailRecipientsFromEnv();
@@ -471,13 +546,16 @@ class ComplaintsService {
                     complaintData,
                     recipients,
                     ccRecipients,
+                    correlationId
                 );
+                logBusinessEvent('EMAIL_NOTIFICATION_PUBLISHED', {
+                    type: 'COMPLAINT_CREATED',
+                    complaintId: complaint.id_complaint,
+                    recipients: recipients.length
+                }, correlationId);
             }
         } catch (error) {
-            console.error(
-                '[ERROR] Error in _sendComplaintNotificationEmail:',
-                error.message,
-            );
+            logError(error, { operation: '_sendComplaintNotificationEmail', complaintId: complaint.id_complaint }, correlationId);
             // No lanzar error para no afectar el flujo principal
         }
     }
@@ -487,10 +565,17 @@ class ComplaintsService {
      * @private
      * @param {Object} complaint - Datos de la queja
      * @param {string} newStatus - Nuevo estado
+     * @param {string} correlationId - ID de correlación
      * @returns {Promise<void>}
      */
-    async _sendComplaintUpdateNotificationEmail(complaint, newStatus) {
+    async _sendComplaintUpdateNotificationEmail(complaint, newStatus, correlationId = null) {
         try {
+            logBusinessEvent('EMAIL_NOTIFICATION_STARTED', {
+                type: 'COMPLAINT_UPDATED',
+                complaintId: complaint.id_complaint,
+                newStatus
+            }, correlationId);
+
             const emailPublisher = EmailPublisherService.getInstance();
             const complaintData = prepareComplaintData(complaint, newStatus);
             const { recipients, ccRecipients } = getEmailRecipientsFromEnv();
@@ -500,13 +585,17 @@ class ComplaintsService {
                     complaintData,
                     recipients,
                     ccRecipients,
+                    correlationId
                 );
+                logBusinessEvent('EMAIL_NOTIFICATION_PUBLISHED', {
+                    type: 'COMPLAINT_UPDATED',
+                    complaintId: complaint.id_complaint,
+                    newStatus,
+                    recipients: recipients.length
+                }, correlationId);
             }
         } catch (error) {
-            console.error(
-                '[ERROR] Error in _sendComplaintUpdateNotificationEmail:',
-                error.message,
-            );
+            logError(error, { operation: '_sendComplaintUpdateNotificationEmail', complaintId: complaint.id_complaint }, correlationId);
             // No lanzar error para no afectar el flujo principal
         }
     }
@@ -519,10 +608,18 @@ class ComplaintsService {
      * @param {string} new_status - Nuevo estado
      * @param {string} changed_by - Usuario que realizó el cambio
      * @param {string} change_description - Descripción del cambio
+     * @param {string} correlationId - ID de correlación
      * @returns {Promise<void>}
      */
-    async _publishStatusChangeEvent(id_complaint, previous_status, new_status, changed_by, change_description) {
+    async _publishStatusChangeEvent(id_complaint, previous_status, new_status, changed_by, change_description, correlationId = null) {
         try {
+            logBusinessEvent('EVENT_SOURCING_PUBLISH_STARTED', {
+                complaintId: id_complaint,
+                previousStatus: previous_status,
+                newStatus: new_status,
+                changedBy: changed_by
+            }, correlationId);
+
             const eventPublisher = getPublisherInstance();
             await eventPublisher.publishStatusChangeEvent({
                 id_complaint,
@@ -530,12 +627,15 @@ class ComplaintsService {
                 new_status,
                 changed_by,
                 change_description,
-            });
+            }, correlationId);
+
+            logBusinessEvent('EVENT_SOURCING_PUBLISHED', {
+                complaintId: id_complaint,
+                previousStatus: previous_status,
+                newStatus: new_status
+            }, correlationId);
         } catch (error) {
-            console.error(
-                '[ERROR] Error in _publishStatusChangeEvent:',
-                error.message,
-            );
+            logError(error, { operation: '_publishStatusChangeEvent', complaintId: id_complaint }, correlationId);
             // No lanzar error para no afectar el flujo principal
         }
     }

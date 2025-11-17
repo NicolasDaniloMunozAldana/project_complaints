@@ -12,6 +12,7 @@ const {
   EMAIL_SUBJECTS,
   EMAIL_TITLES,
 } = require('../config/constants');
+const { logKafkaEvent, logError } = require('../utils/logger');
 
 class EmailPublisherService {
   constructor() {
@@ -67,12 +68,14 @@ class EmailPublisherService {
    * @param {Object} complaintData - Complaint information
    * @param {Array<string>} recipients - Email recipients
    * @param {Array<string>} ccRecipients - CC recipients
+   * @param {string} correlationId - Correlation ID for traceability
    * @returns {Promise<void>}
    */
   async publishComplaintNotification(
     complaintData,
     recipients = [],
     ccRecipients = [],
+    correlationId = null,
   ) {
     try {
       const isReady = await this._ensureKafkaReady();
@@ -96,18 +99,19 @@ class EmailPublisherService {
         createdAt: complaintData.createdAt,
         action: EMAIL_ACTIONS.COMPLAINT_CREATED,
         priority: EMAIL_CONFIG.HIGH_PRIORITY,
+        correlationId: correlationId || null,
         metadata: {
           eventType: EMAIL_EVENT_TYPES.COMPLAINT_CREATED,
           source: EMAIL_CONFIG.DEFAULT_SOURCE,
         },
       };
 
-      await this._publishEmail(emailData);
+      await this._publishEmail(emailData, correlationId);
     } catch (error) {
-      console.error(
-        '[ERROR] Error publishing complaint notification email:',
-        error.message,
-      );
+      logError(error, { 
+        operation: 'publishComplaintNotification', 
+        complaintId: complaintData.id 
+      }, correlationId);
       throw error;
     }
   }
@@ -117,12 +121,14 @@ class EmailPublisherService {
    * @param {Object} complaintData - Updated complaint information
    * @param {Array<string>} recipients - Email recipients
    * @param {Array<string>} ccRecipients - CC recipients
+   * @param {string} correlationId - Correlation ID for traceability
    * @returns {Promise<void>}
    */
   async publishComplaintUpdateNotification(
     complaintData,
     recipients = [],
     ccRecipients = [],
+    correlationId = null,
   ) {
     try {
       const isReady = await this._ensureKafkaReady();
@@ -140,18 +146,19 @@ class EmailPublisherService {
         status: complaintData.status,
         action: EMAIL_ACTIONS.COMPLAINT_UPDATED(complaintData.status),
         priority: EMAIL_CONFIG.DEFAULT_PRIORITY,
+        correlationId: correlationId || null,
         metadata: {
           eventType: EMAIL_EVENT_TYPES.COMPLAINT_UPDATED,
           source: EMAIL_CONFIG.DEFAULT_SOURCE,
         },
       };
 
-      await this._publishEmail(emailData);
+      await this._publishEmail(emailData, correlationId);
     } catch (error) {
-      console.error(
-        '[ERROR] Error publishing complaint update notification:',
-        error.message,
-      );
+      logError(error, { 
+        operation: 'publishComplaintUpdateNotification', 
+        complaintId: complaintData.id 
+      }, correlationId);
       throw error;
     }
   }
@@ -199,11 +206,28 @@ class EmailPublisherService {
    * Publish email notification to Kafka (internal helper)
    * @private
    * @param {Object} emailData - Email data to publish
+   * @param {string} correlationId - Correlation ID for traceability
    * @returns {Promise<void>}
    */
-  async _publishEmail(emailData) {
-    await this.kafkaProducer.publishEmailNotification(emailData);
-    console.log(`[OK] Email notification published to Kafka: ${emailData.id}`);
+  async _publishEmail(emailData, correlationId = null) {
+    try {
+      await this.kafkaProducer.publishEmailNotification(emailData);
+      
+      logKafkaEvent('PRODUCED', 'email-notifications', {
+        emailId: emailData.id,
+        complaintId: emailData.complaintId,
+        to: emailData.to,
+        subject: emailData.subject
+      }, correlationId);
+      
+      console.log(`[OK] Email notification published to Kafka: ${emailData.id}`);
+    } catch (error) {
+      logError(error, { 
+        operation: '_publishEmail', 
+        emailId: emailData.id 
+      }, correlationId);
+      throw error;
+    }
   }
 
   /**
