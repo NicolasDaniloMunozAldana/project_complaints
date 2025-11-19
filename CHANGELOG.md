@@ -5,6 +5,55 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.4] - 2025-11-19
+
+### Added
+- **Kafka Event Consumer Integration**
+  - Implementation of a dedicated Kafka consumer to process system events
+  - Configured subscription to the event topic related to complaint actions
+  - Event handling with proper acknowledgment (commit) after successful processing
+  - Integration of the consumer into the existing architecture through a decoupled service layer
+
+- **Event Sourcing for Complaint Status History**
+  - Implementation of Event Sourcing to track and persist complaint status changes
+  - Specialized consumer to listen for status change events and record them as immutable historical entries
+  - Structured event storage with metadata: event type, timestamp, previous state, new state, responsible user
+  - Guaranteed synchronization between event history and current complaint state without altering existing logic
+
+### Changed
+- **Architectural Integration**
+  - Minor architecture adjustments to integrate event-driven components
+  - Environment variable updates to include Kafka configuration (host, clientId, topic, etc.)
+
+### Fixed
+- **Consumer Stability**
+  - Improved error handling to prevent consumer blocking in case of processing failures
+  - Enhanced logging for greater visibility during status change event processing
+
+## [0.0.4-prev] - 2025-11-05
+
+### Removed
+- **reCAPTCHA Verification System**
+  - Removed Google reCAPTCHA v2 integration from complaints list view
+  - Removed `/verify-captcha` POST endpoint from server
+  - Removed `RECAPTCHA_SECRET` environment variable from configuration
+  - Removed captcha HTML container, wrapper, and message components
+  - Removed captcha verification JavaScript logic and callbacks
+  - Removed `onCaptchaSuccess()` callback function
+  - Removed `isCaptchaValid()` validation function
+  - Removed `adjustRecaptcha()` responsive adjustment function
+  - Removed captcha-related event listeners (DOMContentLoaded, resize, load)
+  - Removed captcha localStorage management (token and expiration)
+  - Removed all captcha-related CSS styles and media query adjustments
+  - Removed Google reCAPTCHA API script from page head
+  - Simplified `showComplaintsList()` function by removing captcha checks
+
+### Changed
+- **Complaints List Access**
+  - Complaints list now displays immediately without captcha verification
+  - Removed display:none styling from complaints container
+  - Streamlined user experience with direct access to complaints
+
 ## [0.0.3] - 2025-10-22
 
 ### Added
@@ -181,6 +230,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History Summary
 
+- **[0.0.4]** - Kafka Event Consumer Integration
 - **[0.0.3]** - Authentication system, Sequelize ORM migration, layered architecture
 - **[0.0.2]** - Comments, status management, deletion, email refactor, reCAPTCHA enhancement
 - **[0.0.1]** - Initial release with basic complaint management, statistics, and testing
